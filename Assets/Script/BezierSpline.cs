@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
+using LinearInterpolation3D;
 
 public class BezierSpline : MonoBehaviour
 {
@@ -12,7 +13,7 @@ public class BezierSpline : MonoBehaviour
 
     List<Vector3> m_Pts = new List<Vector3>();
 
-    LinearInterpoCurve m_MyCurve;
+    CurveLinearInterpo m_MyCurve;
 
     [SerializeField] List<Transform> m_MovingObjects;
     [SerializeField] float m_TranslationSpeed;
@@ -83,7 +84,7 @@ public class BezierSpline : MonoBehaviour
             }
         }
 
-        m_MyCurve = new LinearInterpoCurve(m_Pts, null, m_IsClosed);
+        m_MyCurve = new CurveLinearInterpo(m_Pts, null, m_IsClosed);
 
     }
 
