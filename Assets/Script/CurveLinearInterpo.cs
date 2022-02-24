@@ -1,161 +1,201 @@
-namespace LinearInterpolation3D {
-    using System.Collections;
-    using System.Collections.Generic;
-    using UnityEngine;
 
-    public class Point3D { //tmp: replace with vector3??
-        public float x;
-        public float y;
-        public float z;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using UnityEngine;
+public class CurveLinearInterpo
+{
+    List<Transform> controlsPoints = new List<Transform>();
+    float _ptsDensity;
+    bool _isClosed;
+    float _Length = 0;
+    bool _IsValid = false;
+    private List<Vector3> _ListPts = new List<Vector3>();
+    List<float> _ListLength = new List<float>();
+    List<int> _ListIndex = new List<int>();
+    public float Length { get => _Length; set => _Length = value; }
+    public int NPoints { get => _ListPts == null ? -1 : _ListPts.Count; }
 
-        public Point3D(float a, float b, float c) {
-            x = a;
-            y = b;
-            z = c;
+    public bool IsValid { get => _IsValid; set => _IsValid = value; }
+
+
+
+    public CurveLinearInterpo(List<Transform> controlsPoints, float ptsDensity, bool isClosed = false)
+    {
+        this.controlsPoints = controlsPoints;
+        this._ptsDensity = ptsDensity;
+        this._isClosed = isClosed;
+        float floorLength;
+
+        List<Vector3> positions = this.controlsPoints.Select(item => item.position).ToList();
+
+        if (isClosed)
+        {
+            Vector3 ctrlPt0 = positions[0];
+            Vector3 ctrlPt1 = positions[1];
+            Vector3 ctrlPtMin = positions[positions.Count - 1];
+            positions.Add(ctrlPt0);
+            positions.Add(ctrlPt1);
+            positions.Insert(0, ctrlPtMin);
         }
+        Vector3 previousPoint = Vector3.zero;
 
-        public Vector3 toVector3() {
-            return new Vector3(this.x, this.y, this.z);
-        }
+        for (int i = 1; i < positions.Count - 2; i++)
+        {
+            Vector3 P0 = positions[i - 1];
+            Vector3 P1 = positions[i];
+            Vector3 P2 = positions[i + 1];
+            Vector3 P3 = positions[i + 2];
+            float ditance = Vector3.Distance(P1, P2);
+            int nPts = (int)Mathf.Max(3, ditance * ptsDensity);
+            for (int j = 0; j < nPts; j++)
+            {
+                int nPtsDenominator = (i == positions.Count - 3) && !isClosed ? nPts - 1 : nPts;
+                float k = (float)j / nPtsDenominator;
+                Vector3 currentPoint = ComputeBezierPos(P0, P1, P2, P3, k);
+                _Length += Vector3.Distance(currentPoint, previousPoint);
+                floorLength = Mathf.FloorToInt(_Length);
+                _ListLength.Add(_Length);
 
-        public override string ToString() {
-            return "(" + this.x + "; " + this.y + "; " + this.z + ")";
-        }
-
-        public static Point3D operator -(Point3D a, Point3D b) {
-            return new Point3D(a.x - b.x, a.y - b.y, a.z - b.z);
-        }
-
-        public static Point3D operator +(Point3D a, Point3D b) {
-            return new Point3D(a.x + b.x, a.y + b.y, a.z + b.z);
-        }
-
-        public static Point3D operator *(Point3D a, float b) {
-            return new Point3D(a.x * b, a.y * b, a.z * b);
-        }
-
-        public float Distance(Point3D b) {
-            return Mathf.Sqrt(Mathf.Pow(b.x - this.x, 2) + Mathf.Pow(b.y - this.y, 2) + Mathf.Pow(b.z - this.z, 2));
-        }
-    }
-
-    public class CurveLinearInterpo {
-        public class LogPoint {
-            public float length;
-            public Point3D point;
-
-            public LogPoint(float lgt, Point3D pt) {
-                length = lgt;
-                point = pt;
-            }
-        }
-
-        List<LogPoint> _Points = new List<LogPoint>();
-        List<int> _Indexes = new List<int>();
-        float _TotalLength = 0;
-        bool _isClosed;
-
-        public delegate Point3D MathFunction(float t);
-
-        /// <summary>
-        /// Constructor
-        /// <c> CurveLinearInterpo </c>
-        /// who calculate the array of points on a specific curve given as parameter. The step between each points is constant
-        /// </summary>
-        /// <param name="function"></param>
-        /// <param name="tMin"></param>
-        /// <param name="tMax"></param>
-        /// <param name="nbPoints"></param>
-        /// <param name="isClosed"></param>
-        public CurveLinearInterpo(MathFunction function, float tMin, float tMax, int nbPoints, bool isClosed = false) {
-            _isClosed = isClosed;
-            Point3D currentPoint;
-            Point3D previousPoint = function(tMin);
-            int flooredTotalLength;
-            float step = (tMax - tMin) / (nbPoints - 1);
-
-            if (nbPoints < 2 || tMin == tMax) return;
-
-            for (float j = 0; j <= nbPoints - 1; j++) {
-                float t = tMin + step * j;
-                currentPoint = function(t);
-                _TotalLength += currentPoint.Distance(previousPoint);
-                flooredTotalLength = Mathf.FloorToInt(_TotalLength);
-
-                for (int i = _Indexes.Count; i < flooredTotalLength; i++) {
-                    _Indexes.Add(Mathf.Max(_Points.Count - 1, 0));
+                for (int n = _ListIndex.Count; n < floorLength; n++)
+                {
+                    _ListIndex.Add(Mathf.Max(_ListPts.Count - 1, 0));
                 }
-
-                _Points.Add(new LogPoint(_TotalLength, currentPoint));
                 previousPoint = currentPoint;
+                _ListPts.Add(currentPoint);
             }
 
-            if (_isClosed) {
-                LogPoint firstLogPoint = _Points[0];
-                _TotalLength += previousPoint.Distance(firstLogPoint.point);
-                _Points.Add(new LogPoint(_TotalLength, firstLogPoint.point));
-                flooredTotalLength = Mathf.FloorToInt(_TotalLength);
-
-                for (int i = _Indexes.Count; i <= flooredTotalLength; i++) {
-                    _Indexes.Add(Mathf.Max(_Points.Count - 1, 0));
-                }
-            }
         }
-
-        /// <summary> 
-        /// method 
-        /// <c> GetPositionFromDistance </c>
-        /// This function calculate the lineaire interpolation over a curve and calculates the point P at [dist] from the origin
-        /// </summary>
-        /// <param name="dist"> the distance to the origin </param>
-        /// <returns> The point P on the curve at [dist] from the origin using the linear interpolation formula</returns>
-        public Point3D GetPositionFromDistance(float dist) {
-            int flooredDistance;
-            float distance = dist;
-            int idx;
-            LogPoint previousLogPoint;
-            LogPoint nextLogPoint;
-            if (_isClosed) {
-                while (distance < 0) distance += _TotalLength;
-                distance %= _TotalLength;
-            }
-            else distance = Mathf.Clamp(distance, 0, _TotalLength);
-            flooredDistance = Mathf.FloorToInt(distance);
-            idx = _Indexes[Mathf.Clamp(flooredDistance, 0, _Indexes.Count - 1)];
-            while (_Points[idx].length < distance) idx++;
-            if (idx > 0) idx = idx - 1;
-            previousLogPoint = _Points[idx];
-            nextLogPoint = _Points[idx + 1];
-
-            return previousLogPoint.point + (nextLogPoint.point - previousLogPoint.point) * ((distance - previousLogPoint.length) / (nextLogPoint.length - previousLogPoint.length));
-        }
-
-        public int NumberOfPoints { get { return _Points == null ? 0 : _Points.Count; } }
-        
-        public float TotalLength { get { return _TotalLength; } }
+        _IsValid = true;
     }
 
-    public static class ParametricEquations {
-        public static Point3D Sin(float t) {
-            return new Point3D(t, Mathf.Sin(t), 0);
+
+
+    public bool GetPositionFromDistance(float distance, out Vector3 position, out int segmentIndex)
+    {
+        position = Vector3.zero;
+        segmentIndex = 0;
+        int index;
+        int floorDistance;
+        if (!_IsValid)
+        {
+            return false;
         }
 
-        public static Point3D NegSin3(float t) {
-            return new Point3D(-t, Mathf.Sin(t) * 3, 0);
+
+        if (_isClosed)
+        {
+            while (distance < 0)
+            {
+                distance = distance + _Length;
+            }
+            distance %= _Length;
+        }
+        else
+        {
+            distance = Mathf.Clamp(distance, 0, _Length);
+        }
+        floorDistance = Mathf.FloorToInt(distance);
+        index = _ListIndex[Mathf.Clamp(floorDistance, 0, _ListIndex.Count - 1)];
+        while (_ListLength[index] < distance)
+        {
+            index = index + 1;
+        }
+        if (index > 0)
+        {
+            index = index - 1;
+        }
+        Vector3 previousPoint = _ListPts[index];
+        Vector3 nextPoint = _ListPts[index + 1];
+
+        float previousPointLength = _ListLength[index];
+        float nextPointLength = _ListLength[index + 1];
+
+        segmentIndex = index;
+        position = previousPoint + (nextPoint - previousPoint) * ((distance - previousPointLength) / (nextPointLength - previousPointLength));
+        return true;
+
+    }
+    public bool GetPositionFromDistance(float distance, out Vector3 position)
+    {
+        int segmentIndex;
+        return GetPositionFromDistance(distance, out position, out segmentIndex);
+    }
+
+    public bool GetSphereSplineIntersection(Vector3 centre, float radius, int startIndex, int direction, out Vector3 position, out int segmentIndex)
+    {
+        position = Vector3.zero;
+        Vector3 ABLength = Vector3.zero;
+        segmentIndex = startIndex;
+        float delta;
+        float t = -1;
+        int stopWhile = 0;
+        int index = startIndex;
+
+        if (!IsValid && (direction == 1 || direction == -1))
+        {
+            return false;
         }
 
-        public static Point3D Lissajous(float t) {
-            float a = 30;
-            float b = 30;
-            float theta = t % (2 * Mathf.PI);
-            float phi = 0.2f;
-            float p = 3;
-            float q = 4;
-            return new Point3D(a * Mathf.Sin(theta * p), b * Mathf.Sin(q * theta + phi), 0);
+        while ((t < 0 || 1 < t) && stopWhile < _ListPts.Count)
+        {
+            index = index + direction;
+            if (index < 0 && direction == -1)
+            {
+                index = _ListPts.Count - 2;
+            }
+            if (index > _ListPts.Count - 2 && direction == 1)
+            {
+                index = 0;
+            }
+
+            Vector3 A = _ListPts[index];
+            Vector3 B = _ListPts[index + 1];
+            Vector3 AB = B - A;
+            Vector3 CentreA = A - centre;
+
+            float a = Vector3.Dot(AB, AB);
+            float b = 2 * Vector3.Dot(CentreA, AB);
+            float c = Vector3.Dot(CentreA, CentreA) - Mathf.Pow(radius, 2);
+            ABLength = AB;
+            delta = Mathf.Pow(b, 2) - 4 * a * c;
+
+            if (delta >= 0)
+            {
+                t = (-b + Mathf.Sqrt(delta) * direction) / (2 * a);
+            }
+            else
+            {
+                t = -1;
+            }
+            stopWhile++;
         }
 
-        public static Point3D Lemniscate(float t) {
-            return new Point3D(Mathf.Sin(t) / (1 + Mathf.Pow(Mathf.Cos(t), 2)), Mathf.Sin(t) * Mathf.Cos(t) / (1 + Mathf.Pow(Mathf.Cos(t), 2)), 0);
-        }
+        segmentIndex = index;
+
+        return GetPositionFromDistance(_ListLength[index] + t * ABLength.magnitude + 0 * direction, out position);
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+    Vector3 ComputeBezierPos(Vector3 a, Vector3 b, Vector3 c, Vector3 d, float t)
+    {
+        return (.5f * (
+            (-a + 3f * b - 3f * c + d) * (t * t * t)
+            + (2f * a - 5f * b + 4f * c - d) * (t * t)
+            + (-a + c) * t
+            + 2f * b));
     }
 }
+
+
+
