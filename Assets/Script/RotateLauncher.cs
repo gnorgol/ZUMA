@@ -12,22 +12,33 @@ public class RotateLauncher : MonoBehaviour
     {
 
 
-        RotatePlayerAlongMousePosition();
+        RotateLauncherMousePosition();
 
     }
 
 
-    private void RotatePlayerAlongMousePosition()
+    private void RotateLauncherMousePosition()
     {
+        /*        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+                RaycastHit hit;
+                if (Physics.Raycast(ray, out hit))
+                {
+                    lookPos = hit.point;
+
+                }
+                Vector3 target = new Vector3(lookPos.x, lookPos.y, transform.position.z);
+                transform.LookAt(target);*/
+
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         RaycastHit hit;
-        if (Physics.Raycast(ray, out hit))
-        {
-            Vector3 target = new Vector3(hit.point.x, hit.point.y, transform.position.z);
-            Debug.Log(target);
-            transform.LookAt(target);
-        }
 
+        if (Physics.Raycast(ray, out hit))
+            lookPos = hit.point;
+
+        Vector3 lookDir = lookPos - transform.position;
+        lookDir.z = 0;
+
+        transform.LookAt(transform.position + lookDir, Vector3.forward);
     }
 
 }

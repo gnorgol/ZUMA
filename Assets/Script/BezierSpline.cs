@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
-
+using SDD.Events;
 public class BezierSpline : MonoBehaviour
 {
     [SerializeField] List<Transform> m_CtrlTransform;
@@ -13,11 +13,47 @@ public class BezierSpline : MonoBehaviour
     CurveLinearInterpo m_MyCurve;
     [SerializeField] List<Transform> ListeMovingObject;
     [SerializeField] float m_TranslationSpeed;
-    [SerializeField] bool m_Direction;
-    //[SerializeField] bool reapeat = true;
+    [SerializeField] bool m_Direction = true;
+    [SerializeField] bool _Repeat = true;
     float m_TranslatedDistance = 0;
     float t = 0f;
 
+    #region Event listener
+
+    private void OnEnable()
+    {
+        SubscribeEvents();
+    }
+    private void OnDisable()
+    {
+        UnsubscribeEvents();
+    }
+    public void SubscribeEvents()
+    {
+        EventManager.Instance.AddListener<putBallForwardEvent>(putBallForward);
+        EventManager.Instance.AddListener<putBallBackEvent>(putBallBack);
+    }
+
+    public void UnsubscribeEvents()
+    {
+        EventManager.Instance.RemoveListener<putBallForwardEvent>(putBallForward);
+        EventManager.Instance.RemoveListener<putBallBackEvent>(putBallBack);
+    }
+    #endregion
+
+    private void putBallForward(putBallForwardEvent e)
+    {
+        int index = ListeMovingObject.IndexOf(e.target.transform);
+        Debug.Log("devant");
+        ListeMovingObject.Insert(index, e.ball.transform);
+
+    }
+    private void putBallBack(putBallBackEvent e)
+    {
+        Debug.Log("arrier");
+        int index = ListeMovingObject.IndexOf(e.target.transform);
+        ListeMovingObject.Insert(index+1, e.ball.transform);
+    }
     Vector3 ComputeBezierPos(Vector3 a, Vector3 b, Vector3 c, Vector3 d, float t)
     {
         return (.5f * (
@@ -30,7 +66,7 @@ public class BezierSpline : MonoBehaviour
     {
         List<Vector3> positions = m_CtrlTransform.Select(item => item.position).ToList();
 
-        Vector3 p1 = positions[0];
+/*        Vector3 p1 = positions[0];
         Vector3 p2 = positions[1];
         Vector3 p3 = positions[2];
         Vector3 p4 = positions[3];
@@ -56,7 +92,7 @@ public class BezierSpline : MonoBehaviour
                 m_Pts.Add(pt);
             }
         }
-
+*/
         m_MyCurve = new CurveLinearInterpo(m_CtrlTransform, m_PtsDensity, m_IsClosed);
 
     }
@@ -68,7 +104,7 @@ public class BezierSpline : MonoBehaviour
 
         float previousRadius = 0;
         Vector3 previousPosition = Vector3.zero;
-        int previousIndex = 0;
+        int previousIndex = -1;
 
 
         for (int i = 0; i < ListeMovingObject.Count; i++)
@@ -76,13 +112,15 @@ public class BezierSpline : MonoBehaviour
 
             Transform item = ListeMovingObject[i];
             float currentRadious = item.GetComponent<SphereCollider>().radius * item.localScale.x;
-            int currentIndex;
-            if (i == 0 && m_MyCurve.GetPositionFromDistance(m_TranslatedDistance, out currentposition, out currentIndex))
+            int currentIndex = -1;
+            float distance = _Repeat ? Mathf.Repeat(m_TranslatedDistance, m_MyCurve.Length) : m_TranslatedDistance;
+            if (i == 0 && m_MyCurve.GetPositionFromDistance(distance, out currentposition, out currentIndex))
             {
                 item.position = currentposition;
             }
             else if (m_MyCurve.GetSphereSplineIntersection(previousPosition, previousRadius + currentRadious, previousIndex, m_Direction ? 1 : -1, out currentposition, out currentIndex))
             {
+                //Debug.Log(previousIndex);
                 item.position = currentposition;
             }
             previousRadius = currentRadious;
@@ -92,8 +130,6 @@ public class BezierSpline : MonoBehaviour
         }
         m_TranslatedDistance += m_TranslationSpeed * Time.deltaTime;
     }
-
-
     private void OnDrawGizmos()
     {
         if (m_Pts.Count > 0)

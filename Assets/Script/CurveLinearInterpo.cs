@@ -1,4 +1,3 @@
-
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -71,12 +70,13 @@ public class CurveLinearInterpo
 
 
 
-    public bool GetPositionFromDistance(float distance, out Vector3 position, out int segmentIndex)
+    public bool GetPositionFromDistance(float dist, out Vector3 position, out int segmentIndex)
     {
         position = Vector3.zero;
         segmentIndex = 0;
         int index;
         int floorDistance;
+        float distance = dist;
         if (!_IsValid)
         {
             return false;
@@ -89,7 +89,7 @@ public class CurveLinearInterpo
             {
                 distance = distance + _Length;
             }
-            distance %= _Length;
+           distance %= _Length;
         }
         else
         {
@@ -137,9 +137,10 @@ public class CurveLinearInterpo
             return false;
         }
 
-        while ((t < 0 || 1 < t) && stopWhile < _ListPts.Count)
+        while ((t < 0 || 1 < t) && stopWhile < _ListPts.Count) 
         {
             index = index + direction;
+            //Debug.Log(index);
             if (index < 0 && direction == -1)
             {
                 index = _ListPts.Count - 2;
@@ -148,7 +149,6 @@ public class CurveLinearInterpo
             {
                 index = 0;
             }
-
             Vector3 A = _ListPts[index];
             Vector3 B = _ListPts[index + 1];
             Vector3 AB = B - A;
@@ -169,10 +169,9 @@ public class CurveLinearInterpo
                 t = -1;
             }
             stopWhile++;
-        }
+        } 
 
         segmentIndex = index;
-
         return GetPositionFromDistance(_ListLength[index] + t * ABLength.magnitude + 0 * direction, out position);
     }
 
