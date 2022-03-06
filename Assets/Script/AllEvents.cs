@@ -70,3 +70,8 @@ public class putBallBackEvent : SDD.Events.Event
 
 }
 
+public class CheckMatchBallsEvent : SDD.Events.Event
+{
+	public GameObject ball;
+}
+

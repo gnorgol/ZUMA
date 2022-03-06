@@ -31,7 +31,7 @@ public class BallCollision : MonoBehaviour
                 //Place la ball a l'arrier 
                 EventManager.Instance.Raise(new putBallBackEvent() { target = collision.gameObject, ball = this.gameObject });
             }
-
+            EventManager.Instance.Raise(new CheckMatchBallsEvent() { ball = this.gameObject });
             //this.gameObject.GetComponent<BallCollision>().enabled = false;
 
         }

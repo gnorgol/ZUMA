@@ -5,9 +5,12 @@ using UnityEngine;
 public class ShootLauncher : MonoBehaviour
 {
 	public GameObject Ball;
-	public float ballSpeed = 10;
+	[SerializeField] private float ballSpeed;
 	public GameObject instanceBall;
-
+	[SerializeField]private Material ColorYellow;
+	[SerializeField] private Material ColorRed;
+	[SerializeField] private Material ColorGreen;
+	[SerializeField] private Material ColorBlue;
 
 	private void Start()
 	{
@@ -57,19 +60,19 @@ public class ShootLauncher : MonoBehaviour
 		switch (randColor)
         {
             case BallColor.red:
-                go.GetComponent<Renderer>().material.SetColor("_Color", Color.red);
+                go.GetComponent<Renderer>().material.SetColor("_Color", ColorRed.color);
                 break;
 
             case BallColor.green:
-                go.GetComponent<Renderer>().material.SetColor("_Color", Color.green);
+                go.GetComponent<Renderer>().material.SetColor("_Color", ColorGreen.color);
                 break;
 
             case BallColor.blue:
-                go.GetComponent<Renderer>().material.SetColor("_Color", Color.blue);
+                go.GetComponent<Renderer>().material.SetColor("_Color", ColorBlue.color);
                 break;
 
             case BallColor.yellow:
-                go.GetComponent<Renderer>().material.SetColor("_Color", Color.yellow);
+                go.GetComponent<Renderer>().material.SetColor("_Color", ColorYellow.color);
                 break;
         }
     }

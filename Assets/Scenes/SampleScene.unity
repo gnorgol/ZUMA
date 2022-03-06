@@ -512,7 +512,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
+  - {fileID: 2100000, guid: a958ac9636dd9014e826e172aa1c1a20, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -700,7 +700,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: fc47e04cfca21184c91e355e505c81a7, type: 2}
+  - {fileID: 2100000, guid: b4ae28c4d448a474da22d917b547dcaf, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -1277,6 +1277,10 @@ MonoBehaviour:
   Ball: {fileID: 2045158998011704249, guid: 95af080a16ea24f479a8e24d1430d92b, type: 3}
   ballSpeed: 1000
   instanceBall: {fileID: 0}
+  ColorYellow: {fileID: 2100000, guid: 83ec9bc5d9be2c14e8ac6a0e5a5a0fac, type: 2}
+  ColorRed: {fileID: 2100000, guid: a958ac9636dd9014e826e172aa1c1a20, type: 2}
+  ColorGreen: {fileID: 2100000, guid: 23e8f2deabd3a1a49ba89edb5fe13682, type: 2}
+  ColorBlue: {fileID: 2100000, guid: b4ae28c4d448a474da22d917b547dcaf, type: 2}
 --- !u!1 &1520849109
 GameObject:
   m_ObjectHideFlags: 0

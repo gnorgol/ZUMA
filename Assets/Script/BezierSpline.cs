@@ -31,28 +31,84 @@ public class BezierSpline : MonoBehaviour
     {
         EventManager.Instance.AddListener<putBallForwardEvent>(putBallForward);
         EventManager.Instance.AddListener<putBallBackEvent>(putBallBack);
+        EventManager.Instance.AddListener<CheckMatchBallsEvent>(CheckMatchBalls);
     }
 
     public void UnsubscribeEvents()
     {
         EventManager.Instance.RemoveListener<putBallForwardEvent>(putBallForward);
         EventManager.Instance.RemoveListener<putBallBackEvent>(putBallBack);
+        EventManager.Instance.RemoveListener<CheckMatchBallsEvent>(CheckMatchBalls);
     }
     #endregion
 
     private void putBallForward(putBallForwardEvent e)
     {
         int index = ListeMovingObject.IndexOf(e.target.transform);
-        Debug.Log("devant");
         ListeMovingObject.Insert(index, e.ball.transform);
 
     }
     private void putBallBack(putBallBackEvent e)
     {
-        Debug.Log("arrier");
         int index = ListeMovingObject.IndexOf(e.target.transform);
-        ListeMovingObject.Insert(index+1, e.ball.transform);
+        ListeMovingObject.Insert(index + 1, e.ball.transform);
     }
+    private void CheckMatchBalls(CheckMatchBallsEvent e)
+    {
+        int index = ListeMovingObject.IndexOf(e.ball.transform);
+        int CountFrontSameColor = 0;
+        int CountBackSameColor = 0;
+        Color ballColor = e.ball.GetComponent<Renderer>().material.GetColor("_Color");
+        Debug.Log(index);
+        Debug.Log(ListeMovingObject.Count);
+
+            for (int i = index - 1; i >= 0; i--)
+            {
+                Debug.Log("Front : " + ListeMovingObject[i].name);
+                Color currrentBallColor = ListeMovingObject[i].GetComponent<Renderer>().material.GetColor("_Color");
+
+                if (ballColor == currrentBallColor)
+                {
+                    CountFrontSameColor = CountFrontSameColor + 1;
+                }
+                else
+                {
+                    break;
+                }
+            }
+        
+        for (int i = index + 1; i < ListeMovingObject.Count; i++)
+        {
+            Debug.Log("Back : " + ListeMovingObject[i].name);
+            Color currrentBallColor = ListeMovingObject[i].GetComponent<Renderer>().material.GetColor("_Color");
+
+            if (ballColor == currrentBallColor)
+            {
+                CountBackSameColor = CountBackSameColor + 1;
+            }
+            else
+            {
+                break;
+            }
+        }
+        Debug.Log("Count front : " + CountFrontSameColor);
+        Debug.Log("Count back : " + CountBackSameColor);
+        if (CountFrontSameColor + CountBackSameColor >= 2)
+        {
+            RemoveBalls(index - CountFrontSameColor, CountFrontSameColor + CountBackSameColor + 1);
+        }
+
+    }
+    private void RemoveBalls(int index, int range)
+    {
+        foreach (var item in ListeMovingObject.GetRange(index, range))
+        {
+            Destroy(item.gameObject);
+        }
+        ListeMovingObject.RemoveRange(index, range);
+    }
+
+
     Vector3 ComputeBezierPos(Vector3 a, Vector3 b, Vector3 c, Vector3 d, float t)
     {
         return (.5f * (
@@ -65,33 +121,33 @@ public class BezierSpline : MonoBehaviour
     {
         List<Vector3> positions = m_CtrlTransform.Select(item => item.position).ToList();
 
-/*        Vector3 p1 = positions[0];
-        Vector3 p2 = positions[1];
-        Vector3 p3 = positions[2];
-        Vector3 p4 = positions[3];
+        /*        Vector3 p1 = positions[0];
+                Vector3 p2 = positions[1];
+                Vector3 p3 = positions[2];
+                Vector3 p4 = positions[3];
 
-        for (int i = 0; i < m_NbPtsOnSpline; i++)
-        {
-            float t = (float)i / (m_NbPtsOnSpline - 1);
-            m_Pts.Add(ComputeBezierPos(p1, p2, p3, p4, t));
-        }
-        for (int i = 1; i < positions.Count - 2; i++)
-        {
-            Vector3 P0 = positions[i - 1];
-            Vector3 P1 = positions[i];
-            Vector3 P2 = positions[i + 1];
-            Vector3 P3 = positions[i + 2];
-            float ditance = Vector3.Distance(P1, P2);
-            int nPts = (int)Mathf.Max(3, ditance * m_PtsDensity);
-            for (int j = 0; j < nPts; j++)
-            {
-                int nPtsDenominator = (i == positions.Count - 3) && !m_IsClosed ? nPts - 1 : nPts;
-                float k = (float)j / nPtsDenominator;
-                Vector3 pt = ComputeBezierPos(P0, P1, P2, P3, k);
-                m_Pts.Add(pt);
-            }
-        }
-*/
+                for (int i = 0; i < m_NbPtsOnSpline; i++)
+                {
+                    float t = (float)i / (m_NbPtsOnSpline - 1);
+                    m_Pts.Add(ComputeBezierPos(p1, p2, p3, p4, t));
+                }
+                for (int i = 1; i < positions.Count - 2; i++)
+                {
+                    Vector3 P0 = positions[i - 1];
+                    Vector3 P1 = positions[i];
+                    Vector3 P2 = positions[i + 1];
+                    Vector3 P3 = positions[i + 2];
+                    float ditance = Vector3.Distance(P1, P2);
+                    int nPts = (int)Mathf.Max(3, ditance * m_PtsDensity);
+                    for (int j = 0; j < nPts; j++)
+                    {
+                        int nPtsDenominator = (i == positions.Count - 3) && !m_IsClosed ? nPts - 1 : nPts;
+                        float k = (float)j / nPtsDenominator;
+                        Vector3 pt = ComputeBezierPos(P0, P1, P2, P3, k);
+                        m_Pts.Add(pt);
+                    }
+                }
+        */
         m_MyCurve = new CurveLinearInterpo(m_CtrlTransform, m_PtsDensity, m_IsClosed);
 
     }
