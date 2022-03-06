@@ -8,7 +8,6 @@ public class BallCollision : MonoBehaviour
 
     private void OnCollisionEnter(Collision collision)
     {
-        Debug.Log("collision");
         if (collision.gameObject.tag == "ActiveBalls" && !stopCollision)
         {
             stopCollision = true;

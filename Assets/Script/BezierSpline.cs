@@ -16,7 +16,6 @@ public class BezierSpline : MonoBehaviour
     [SerializeField] bool m_Direction = true;
     [SerializeField] bool _Repeat = true;
     float m_TranslatedDistance = 0;
-    float t = 0f;
 
     #region Event listener
 
