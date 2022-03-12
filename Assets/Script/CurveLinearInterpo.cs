@@ -50,8 +50,8 @@ public class CurveLinearInterpo
             for (int j = 0; j < nPts; j++)
             {
                 int nPtsDenominator = (i == positions.Count - 3) && !isClosed ? nPts - 1 : nPts;
-                float k = (float)j / nPtsDenominator;
-                Vector3 currentPoint = ComputeBezierPos(P0, P1, P2, P3, k);
+                float t = (float)j / nPtsDenominator;
+                Vector3 currentPoint = ComputeBezierPos(P0, P1, P2, P3, t);
                 _Length += Vector3.Distance(currentPoint, previousPoint);
                 floorLength = Mathf.FloorToInt(_Length);
                 _ListLength.Add(_Length);
@@ -113,6 +113,7 @@ public class CurveLinearInterpo
 
         segmentIndex = index;
         position = previousPoint + (nextPoint - previousPoint) * ((distance - previousPointLength) / (nextPointLength - previousPointLength));
+        
         return true;
 
     }
@@ -130,8 +131,7 @@ public class CurveLinearInterpo
         float delta;
         float t = -1;
         int stopWhile = 0;
-        int index = startIndex;
-
+        int index = startIndex+1;
         if (!IsValid && (direction == 1 || direction == -1))
         {
             return false;
@@ -174,18 +174,6 @@ public class CurveLinearInterpo
         segmentIndex = index;
         return GetPositionFromDistance(_ListLength[index] + t * ABLength.magnitude + 0 * direction, out position);
     }
-
-
-
-
-
-
-
-
-
-
-
-
     Vector3 ComputeBezierPos(Vector3 a, Vector3 b, Vector3 c, Vector3 d, float t)
     {
         return (.5f * (
