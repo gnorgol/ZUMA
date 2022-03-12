@@ -14,22 +14,23 @@ public class ShootLauncher : MonoBehaviour
 
 	private void Start()
 	{
+		Application.targetFrameRate = 60;
 		CreateBall();
 	}
 	private void Update()
 	{
 		SetBallPostion();
-
+	}
+    private void FixedUpdate()
+    {
 		//shoot ball
 		if (Input.GetKeyDown(KeyCode.Mouse0))
 		{
 			instanceBall.GetComponent<Rigidbody>().AddForce(instanceBall.transform.forward * ballSpeed);
 			CreateBall();
 		}
-
 	}
-
-	private void SetBallPostion()
+    private void SetBallPostion()
 	{
 		instanceBall.transform.forward = transform.forward;
 		instanceBall.transform.position = transform.position + transform.forward * transform.localScale.z;

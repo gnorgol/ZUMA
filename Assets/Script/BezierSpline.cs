@@ -95,6 +95,7 @@ public class BezierSpline : MonoBehaviour
         Debug.Log("Count back : " + CountBackSameColor);
         if (CountFrontSameColor + CountBackSameColor >= 2)
         {
+            EventManager.Instance.Raise(new ScoreItemEvent() { eScore = 10 * (CountFrontSameColor + CountBackSameColor+1) });
             RemoveBalls(index - CountFrontSameColor, CountFrontSameColor + CountBackSameColor + 1);
         }
 
