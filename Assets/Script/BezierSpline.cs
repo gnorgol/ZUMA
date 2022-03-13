@@ -16,7 +16,9 @@ public class BezierSpline : MonoBehaviour
     [SerializeField] bool m_Direction = true;
     [SerializeField] bool _Repeat = true;
     float m_TranslatedDistance = 0;
-
+    [SerializeField] List<GameObject> ListBall;
+    [SerializeField] int nbBall;
+    [SerializeField] int idLevel;
     #region Event listener
 
     private void OnEnable()
@@ -32,6 +34,7 @@ public class BezierSpline : MonoBehaviour
         EventManager.Instance.AddListener<putBallForwardEvent>(putBallForward);
         EventManager.Instance.AddListener<putBallBackEvent>(putBallBack);
         EventManager.Instance.AddListener<CheckMatchBallsEvent>(CheckMatchBalls);
+        EventManager.Instance.AddListener<MainMenuButtonClickedEvent>(GameMenu);
     }
 
     public void UnsubscribeEvents()
@@ -39,9 +42,13 @@ public class BezierSpline : MonoBehaviour
         EventManager.Instance.RemoveListener<putBallForwardEvent>(putBallForward);
         EventManager.Instance.RemoveListener<putBallBackEvent>(putBallBack);
         EventManager.Instance.RemoveListener<CheckMatchBallsEvent>(CheckMatchBalls);
+        EventManager.Instance.RemoveListener<MainMenuButtonClickedEvent>(GameMenu);
     }
     #endregion
-
+    private void GameMenu(MainMenuButtonClickedEvent e)
+    {
+        DestroyAllMovingObject();
+    }
     private void putBallForward(putBallForwardEvent e)
     {
         int index = ListeMovingObject.IndexOf(e.target.transform);
@@ -118,6 +125,16 @@ public class BezierSpline : MonoBehaviour
             + (-a + c) * t
             + 2f * b));
     }
+    private void Awake()
+    {
+        for (int i = 0; i < nbBall; i++)
+        {
+            int r = Random.Range(0, 4);
+            GameObject clone;
+            clone = Instantiate(ListBall[r], Vector3.zero, Quaternion.identity);
+            ListeMovingObject.Add(clone.transform);
+        }
+    }
     private void Start()
     {
         List<Vector3> positions = m_CtrlTransform.Select(item => item.position).ToList();
@@ -172,6 +189,13 @@ public class BezierSpline : MonoBehaviour
             float distance = _Repeat ? Mathf.Repeat(m_TranslatedDistance, m_MyCurve.Length) : m_TranslatedDistance;
             if (i == 0 && m_MyCurve.GetPositionFromDistance(distance, out currentposition, out currentIndex))
             {
+
+                if (currentIndex == m_MyCurve.NPoints - 2)
+                {
+                    DestroyAllMovingObject();
+                    EventManager.Instance.Raise(new FinishCurveEvent());
+
+                }
                 item.position = currentposition;
             }
             else if (m_MyCurve.GetSphereSplineIntersection(previousPosition, previousRadius + currentRadious, previousIndex, m_Direction ? 1 : -1, out currentposition, out currentIndex))
@@ -184,7 +208,23 @@ public class BezierSpline : MonoBehaviour
 
         }
         m_TranslatedDistance += m_TranslationSpeed * Time.deltaTime;
+        if (ListeMovingObject.Count == 0)
+        {
+            DestroyAllMovingObject();
+            EventManager.Instance.Raise(new GameLevelChangedEvent() { eLevel = idLevel+1 });
+        }
+
+
     }
+    public void DestroyAllMovingObject()
+    {
+        foreach (var destroyFinishCurve in ListeMovingObject)
+        {
+            Destroy(destroyFinishCurve.gameObject);
+        }
+    }
+
+
    /* private void OnDrawGizmos()
     {
         if (m_Pts.Count > 0)

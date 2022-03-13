@@ -72,6 +72,34 @@ public class GameManager : Manager<GameManager>
     [SerializeField]
     private GameObject m_Player;
     #endregion
+    #region Level
+    [SerializeField]
+    private List<GameObject> m_Level;
+    private GameObject currentLevel;
+    int currentIdLevel = 0;
+    private void GameLevelChanged(GameLevelChangedEvent e)
+    {
+        if (currentIdLevel != 0)
+        {
+            Destroy(currentLevel);
+        }
+        currentIdLevel = e.eLevel;
+        if (currentIdLevel > m_Level.Count)
+        {
+            Victory();
+        }
+        else
+        {
+            InstantiateLevel();
+        }
+        
+    }
+    private void InstantiateLevel()
+    {
+        GameObject level = m_Level[currentIdLevel-1];
+        currentLevel = Instantiate(level,level.transform.position,Quaternion.identity);
+    }
+    #endregion
     #region Events' subscription
     public override void SubscribeEvents()
     {
@@ -86,6 +114,10 @@ public class GameManager : Manager<GameManager>
         //Score Item
         EventManager.Instance.AddListener<ScoreItemEvent>(ScoreHasBeenGained);
 
+        //Level
+        EventManager.Instance.AddListener<GameLevelChangedEvent>(GameLevelChanged);
+
+        EventManager.Instance.AddListener<FinishCurveEvent>(FinishCurve);
     }
 
 
@@ -103,7 +135,11 @@ public class GameManager : Manager<GameManager>
 
         //Score Item
         EventManager.Instance.RemoveListener<ScoreItemEvent>(ScoreHasBeenGained);
+        //Level
+        EventManager.Instance.RemoveListener<GameLevelChangedEvent>(GameLevelChanged);
 
+
+        EventManager.Instance.RemoveListener<FinishCurveEvent>(FinishCurve);
     }
     #endregion
     #region Manager implementation
@@ -168,6 +204,7 @@ public class GameManager : Manager<GameManager>
         SetTimeScale(0);
         m_Player.SetActive(false);
         m_GameState = GameState.gameMenu;
+        Destroy(currentLevel);
         /*if (MusicLoopsManager.Instance) MusicLoopsManager.Instance.PlayMusic(Constants.MENU_MUSIC);*/
         EventManager.Instance.Raise(new GameMenuEvent());
     }
@@ -178,6 +215,7 @@ public class GameManager : Manager<GameManager>
         InitNewGame();
         m_Player.SetActive(true);
         SetTimeScale(1);
+        EventManager.Instance.Raise(new GameLevelChangedEvent() { eLevel = 1 });
         m_GameState = GameState.gamePlay;
         EventManager.Instance.Raise(new GamePlayEvent());
 
@@ -187,6 +225,7 @@ public class GameManager : Manager<GameManager>
     {
         /*if (!IsPlaying) return;*/
         SetTimeScale(0);
+        m_Player.SetActive(false);
         GameStateBeforePause = m_GameState;
         m_GameState = GameState.gamePause;
         EventManager.Instance.Raise(new GamePauseEvent());
@@ -195,13 +234,29 @@ public class GameManager : Manager<GameManager>
     private void Resume()
     {
         if (IsPlaying) return;
-
+        m_Player.SetActive(true);
         SetTimeScale(1);
         m_GameState = GameStateBeforePause;
         EventManager.Instance.Raise(new GameResumeEvent());
     }
+
+    private void FinishCurve(FinishCurveEvent e)
+    {
+
+        Over();
+    }
+    private void Victory()
+    {
+        Destroy(currentLevel);
+        m_Player.SetActive(false);
+        SetTimeScale(0);
+        m_GameState = GameState.gameVictory;
+        EventManager.Instance.Raise(new GameVictoryEvent());
+    }
     private void Over()
     {
+        Destroy(currentLevel);
+        m_Player.SetActive(false);
         SetTimeScale(0);
         m_GameState = GameState.gameOver;
         EventManager.Instance.Raise(new GameOverEvent());

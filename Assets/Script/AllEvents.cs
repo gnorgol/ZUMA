@@ -74,3 +74,11 @@ public class CheckMatchBallsEvent : SDD.Events.Event
 	public GameObject ball;
 }
 
+public class GameLevelChangedEvent : SDD.Events.Event
+{
+	public int eLevel { get; set; }
+}
+public class FinishCurveEvent : SDD.Events.Event
+{
+}
+

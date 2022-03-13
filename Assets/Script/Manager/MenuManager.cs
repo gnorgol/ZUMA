@@ -12,7 +12,9 @@ public class MenuManager : Manager<MenuManager>
     [Header("Panels")]
     [SerializeField] GameObject m_PanelMainMenu;
     [SerializeField] GameObject m_PanelInGameMenu;
+    [SerializeField] GameObject m_PanelGameVictory;
     [SerializeField] GameObject m_PanelGameOver;
+
     List<GameObject> m_AllPanels;
 
     #endregion
@@ -61,8 +63,9 @@ public class MenuManager : Manager<MenuManager>
         m_AllPanels = new List<GameObject>();
         m_AllPanels.Add(m_PanelMainMenu);
         m_AllPanels.Add(m_PanelInGameMenu);
+        m_AllPanels.Add(m_PanelGameVictory);
         m_AllPanels.Add(m_PanelGameOver);
-
+       
     }
 
     void OpenPanel(GameObject panel)
@@ -78,13 +81,7 @@ public class MenuManager : Manager<MenuManager>
     {
         panel.SetActive(false);
     }
-    void ActiveLifeBarChildren(GameObject panel)
-    {
-        for (int i = 0; i < panel.transform.childCount; i++)
-        {
-            panel.transform.GetChild(i).gameObject.SetActive(true);
-        }
-    }
+
     #endregion
 
     #region UI OnClick Events
@@ -140,5 +137,10 @@ public class MenuManager : Manager<MenuManager>
     {
         OpenPanel(m_PanelGameOver);
     }
+    protected override void GameVictory(GameVictoryEvent e)
+    {
+        OpenPanel(m_PanelGameVictory);
+    }
+
     #endregion
 }

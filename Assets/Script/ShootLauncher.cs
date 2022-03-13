@@ -4,61 +4,68 @@ using UnityEngine;
 
 public class ShootLauncher : MonoBehaviour
 {
-	public GameObject Ball;
-	[SerializeField] private float ballSpeed;
-	public GameObject instanceBall;
-	[SerializeField]private Material ColorYellow;
-	[SerializeField] private Material ColorRed;
-	[SerializeField] private Material ColorGreen;
-	[SerializeField] private Material ColorBlue;
-
-	private void Start()
-	{
-		Application.targetFrameRate = 60;
-		CreateBall();
-	}
-	private void Update()
-	{
-		SetBallPostion();
-	}
-    private void FixedUpdate()
+    public GameObject Ball;
+    [SerializeField] private float ballSpeed;
+    public GameObject instanceBall;
+    [SerializeField] private Material ColorYellow;
+    [SerializeField] private Material ColorRed;
+    [SerializeField] private Material ColorGreen;
+    [SerializeField] private Material ColorBlue;
+    [SerializeField] float m_CoolDownDuration;
+    float m_NextShootTime;
+    private void Start()
     {
-		//shoot ball
-		if (Input.GetKeyDown(KeyCode.Mouse0))
-		{
-			instanceBall.GetComponent<Rigidbody>().AddForce(instanceBall.transform.forward * ballSpeed);
-			CreateBall();
-		}
-	}
+        m_NextShootTime = Time.time;
+        CreateBall();
+    }
+    private void Update()
+    {
+        SetBallPostion();
+        if (Input.GetKeyDown(KeyCode.Mouse0) && Time.time > m_NextShootTime)
+        {
+
+            instanceBall.GetComponent<Rigidbody>().velocity = instanceBall.transform.forward * ballSpeed;
+            CreateBall();
+
+            m_NextShootTime = Time.time + m_CoolDownDuration;
+        }
+        if (Input.GetKeyDown(KeyCode.Mouse1))
+        {
+            ChangeColor();
+        }
+    }
     private void SetBallPostion()
-	{
-		instanceBall.transform.forward = transform.forward;
-		instanceBall.transform.position = transform.position + transform.forward * transform.localScale.z;
-	}
+    {
+        instanceBall.transform.forward = transform.forward;
+        instanceBall.transform.position = transform.position + transform.forward * transform.localScale.z;
+    }
 
+    private void ChangeColor()
+    {
+        SetBallColor(instanceBall);
+    }
+    private void CreateBall()
+    {
+        instanceBall = Instantiate(Ball, transform.position, Quaternion.identity);
+        instanceBall.SetActive(true);
 
-	private void CreateBall()
-	{
-		instanceBall = Instantiate(Ball, transform.position, Quaternion.identity);
-		instanceBall.SetActive(true);
+        instanceBall.tag = "NewBall";
 
-		instanceBall.tag = "NewBall";
+        SetBallColor(instanceBall);
+    }
 
-		SetBallColor(instanceBall);
-	}
-
-	public enum BallColor
-	{
-		red,
-		green,
-		blue,
-		yellow
-	}
-	private void SetBallColor(GameObject go)
+    public enum BallColor
+    {
+        red,
+        green,
+        blue,
+        yellow
+    }
+    private void SetBallColor(GameObject go)
     {
         BallColor randColor = (BallColor)Random.Range(0, 4);
 
-		switch (randColor)
+        switch (randColor)
         {
             case BallColor.red:
                 go.GetComponent<Renderer>().material.SetColor("_Color", ColorRed.color);
