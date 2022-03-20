@@ -3039,7 +3039,7 @@ MonoBehaviour:
   ColorGreen: {fileID: 2100000, guid: 23e8f2deabd3a1a49ba89edb5fe13682, type: 2}
   ColorBlue: {fileID: 2100000, guid: b4ae28c4d448a474da22d917b547dcaf, type: 2}
   m_CoolDownDuration: 0.3
-  test: {fileID: 2100244677}
+  shootEndPosition: {fileID: 2100244677}
 --- !u!1 &1745797973
 GameObject:
   m_ObjectHideFlags: 0
