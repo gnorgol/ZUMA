@@ -125,16 +125,25 @@ public class BezierSpline : MonoBehaviour
             + (-a + c) * t
             + 2f * b));
     }
+    
     private void Awake()
     {
+        int PreviousR = 0;
+        int r;
         for (int i = 0; i < nbBall; i++)
         {
-            int r = Random.Range(0, 4);
+            r = Random.Range(0, 4);
+            while (r == PreviousR)
+            {
+               r = Random.Range(0, 4);
+            }
+            PreviousR = r;
             GameObject clone;
             clone = Instantiate(ListBall[r], Vector3.zero, Quaternion.identity);
             ListeMovingObject.Add(clone.transform);
         }
     }
+
     private void Start()
     {
         List<Vector3> positions = m_CtrlTransform.Select(item => item.position).ToList();
