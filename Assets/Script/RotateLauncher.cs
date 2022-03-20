@@ -19,15 +19,6 @@ public class RotateLauncher : MonoBehaviour
 
     private void RotateLauncherMousePosition()
     {
-        /*        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-                RaycastHit hit;
-                if (Physics.Raycast(ray, out hit))
-                {
-                    lookPos = hit.point;
-
-                }
-                Vector3 target = new Vector3(lookPos.x, lookPos.y, transform.position.z);
-                transform.LookAt(target);*/
 
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         RaycastHit hit;
@@ -36,9 +27,10 @@ public class RotateLauncher : MonoBehaviour
             lookPos = hit.point;
 
         Vector3 lookDir = lookPos - transform.position;
-        lookDir.z = 0;
 
-        transform.LookAt(transform.position + lookDir, Vector3.forward);
+        float angle = Mathf.Atan2(lookPos.y, lookPos.x) * Mathf.Rad2Deg;
+        transform.eulerAngles = new Vector3(0, 0, angle);
+
     }
 
 }

@@ -13,6 +13,9 @@ public class ShootLauncher : MonoBehaviour
     [SerializeField] private Material ColorBlue;
     [SerializeField] float m_CoolDownDuration;
     float m_NextShootTime;
+    [SerializeField] Transform shootEndPosition;
+    Vector3 shootDir;
+    int ballColor;
     private void Start()
     {
         m_NextShootTime = Time.time;
@@ -23,26 +26,39 @@ public class ShootLauncher : MonoBehaviour
         SetBallPostion();
         if (Input.GetKeyDown(KeyCode.Mouse0) && Time.time > m_NextShootTime)
         {
-
-            instanceBall.GetComponent<Rigidbody>().velocity = instanceBall.transform.forward * ballSpeed;
+            Shoot();
             CreateBall();
-
             m_NextShootTime = Time.time + m_CoolDownDuration;
         }
         if (Input.GetKeyDown(KeyCode.Mouse1))
         {
             ChangeColor();
         }
+        
     }
+
+    private void Shoot()
+    {
+        shootDir = (shootEndPosition.position - instanceBall.transform.position).normalized;
+        instanceBall.GetComponent<Ball>().Setup(shootDir);
+
+    }
+
     private void SetBallPostion()
     {
         instanceBall.transform.forward = transform.forward;
-        instanceBall.transform.position = transform.position + transform.forward * transform.localScale.z;
+        instanceBall.transform.position = transform.position + transform.right;
     }
 
     private void ChangeColor()
     {
-        SetBallColor(instanceBall);
+        ballColor = ballColor + 1;
+        if (System.Enum.GetNames(typeof(BallColor)).Length == ballColor)
+        {
+            ballColor = 0;
+        }
+
+        SetBallColor(instanceBall, ballColor);
     }
     private void CreateBall()
     {
@@ -51,7 +67,7 @@ public class ShootLauncher : MonoBehaviour
 
         instanceBall.tag = "NewBall";
 
-        SetBallColor(instanceBall);
+        SetRandomBallColor(instanceBall);
     }
 
     public enum BallColor
@@ -61,26 +77,30 @@ public class ShootLauncher : MonoBehaviour
         blue,
         yellow
     }
-    private void SetBallColor(GameObject go)
+    private void SetRandomBallColor(GameObject ball)
     {
-        BallColor randColor = (BallColor)Random.Range(0, 4);
-
-        switch (randColor)
+        ballColor = Random.Range(0, 4);
+        SetBallColor(ball, ballColor);
+    }
+    private void SetBallColor(GameObject ball,int indexColor)
+    {
+        BallColor randomColor = (BallColor)indexColor;
+        switch (randomColor)
         {
             case BallColor.red:
-                go.GetComponent<Renderer>().material.SetColor("_Color", ColorRed.color);
+                ball.GetComponent<Renderer>().material.SetColor("_Color", ColorRed.color);
                 break;
 
             case BallColor.green:
-                go.GetComponent<Renderer>().material.SetColor("_Color", ColorGreen.color);
+                ball.GetComponent<Renderer>().material.SetColor("_Color", ColorGreen.color);
                 break;
 
             case BallColor.blue:
-                go.GetComponent<Renderer>().material.SetColor("_Color", ColorBlue.color);
+                ball.GetComponent<Renderer>().material.SetColor("_Color", ColorBlue.color);
                 break;
 
             case BallColor.yellow:
-                go.GetComponent<Renderer>().material.SetColor("_Color", ColorYellow.color);
+                ball.GetComponent<Renderer>().material.SetColor("_Color", ColorYellow.color);
                 break;
         }
     }
