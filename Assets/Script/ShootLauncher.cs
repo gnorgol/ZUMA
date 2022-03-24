@@ -47,7 +47,7 @@ public class ShootLauncher : MonoBehaviour
     private void SetBallPostion()
     {
         instanceBall.transform.forward = transform.forward;
-        instanceBall.transform.position = transform.position + transform.right;
+        instanceBall.transform.position = transform.position + transform.right * 2.0f;
     }
 
     private void ChangeColor()

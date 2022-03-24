@@ -18,7 +18,6 @@ public class BallCollision : MonoBehaviour
             this.gameObject.tag = "ActiveBalls";
             ContactPoint contact = collision.contacts[0];
             Vector3 CollisionDir = contact.point - collision.transform.position;
-            int currentIdx = collision.transform.GetSiblingIndex();
             float angle = Vector3.Angle(CollisionDir, collision.transform.forward);
             if (angle > 90)
             {

@@ -19,6 +19,9 @@ public class BezierSpline : MonoBehaviour
     [SerializeField] List<GameObject> ListBall;
     [SerializeField] int nbBall;
     [SerializeField] int idLevel;
+    LineRenderer lineRenderer;
+
+
     #region Event listener
 
     private void OnEnable()
@@ -128,6 +131,7 @@ public class BezierSpline : MonoBehaviour
     
     private void Awake()
     {
+        lineRenderer = this.GetComponent<LineRenderer>();
         int PreviousR = 0;
         int r;
         for (int i = 0; i < nbBall; i++)
@@ -176,7 +180,8 @@ public class BezierSpline : MonoBehaviour
         }
 
         m_MyCurve = new CurveLinearInterpo(m_CtrlTransform, m_PtsDensity, m_IsClosed);
-
+        lineRenderer.positionCount = m_MyCurve.ListPts.Count;
+        lineRenderer.SetPositions(m_MyCurve.ListPts.ToArray());
     }
 
     private void Update()
@@ -187,14 +192,14 @@ public class BezierSpline : MonoBehaviour
         float previousRadius = 0;
         Vector3 previousPosition = Vector3.zero;
         int previousIndex = -1;
-
+        int currentIndex = -1;
 
         for (int i = 0; i < ListeMovingObject.Count; i++)
         {
 
             Transform item = ListeMovingObject[i];
             float currentRadious = item.GetComponent<SphereCollider>().radius * item.localScale.x;
-            int currentIndex = -1;
+
             float distance = _Repeat ? Mathf.Repeat(m_TranslatedDistance, m_MyCurve.Length) : m_TranslatedDistance;
             if (i == 0 && m_MyCurve.GetPositionFromDistance(distance, out currentposition, out currentIndex))
             {

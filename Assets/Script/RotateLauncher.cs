@@ -26,7 +26,6 @@ public class RotateLauncher : MonoBehaviour
         if (Physics.Raycast(ray, out hit))
             lookPos = hit.point;
 
-        Vector3 lookDir = lookPos - transform.position;
 
         float angle = Mathf.Atan2(lookPos.y, lookPos.x) * Mathf.Rad2Deg;
         transform.eulerAngles = new Vector3(0, 0, angle);

@@ -16,7 +16,7 @@ public class CurveLinearInterpo
     public int NPoints { get => _ListPts == null ? -1 : _ListPts.Count; }
 
     public bool IsValid { get => _IsValid; set => _IsValid = value; }
-
+    public List<Vector3> ListPts { get => _ListPts; set => _ListPts = value; }
 
 
     public CurveLinearInterpo(List<Transform> controlsPoints, float ptsDensity, bool isClosed = false)
@@ -27,7 +27,6 @@ public class CurveLinearInterpo
         float floorLength;
 
         List<Vector3> positions = this.controlsPoints.Select(item => item.position).ToList();
-
         if (isClosed)
         {
             Vector3 ctrlPt0 = positions[0];
@@ -96,6 +95,7 @@ public class CurveLinearInterpo
             distance = Mathf.Clamp(distance, 0, _Length);
         }
         floorDistance = Mathf.FloorToInt(distance);
+        
         index = _ListIndex[Mathf.Clamp(floorDistance, 0, _ListIndex.Count - 1)];
         while (_ListLength[index] < distance)
         {
@@ -110,10 +110,10 @@ public class CurveLinearInterpo
 
         float previousPointLength = _ListLength[index];
         float nextPointLength = _ListLength[index + 1];
-
         segmentIndex = index;
         position = previousPoint + (nextPoint - previousPoint) * ((distance - previousPointLength) / (nextPointLength - previousPointLength));
-        
+
+
         return true;
 
     }
@@ -140,7 +140,6 @@ public class CurveLinearInterpo
         while ((t < 0 || 1 < t) && stopWhile < _ListPts.Count) 
         {
             index = index + direction;
-            //Debug.Log(index);
             if (index < 0 && direction == -1)
             {
                 index = _ListPts.Count - 2;
