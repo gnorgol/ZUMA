@@ -4,8 +4,8 @@ using UnityEngine.UI;
 using System.Collections.Generic;
 using SDD.Events;
 using System;
-
-
+using System.Linq;
+using TMPro;
 public enum GameState { gameMenu, gamePlay, gameNextLevel, gamePause, gameOver, gameVictory }
 
 public class GameManager : Manager<GameManager>
@@ -75,6 +75,8 @@ public class GameManager : Manager<GameManager>
     #region Level
     [SerializeField]
     private List<GameObject> m_Level;
+    [SerializeField] TMP_Dropdown m_LevelDropdown;
+    private int m_SelectLevel;
     private GameObject currentLevel;
     int currentIdLevel = 0;
     private void GameLevelChanged(GameLevelChangedEvent e)
@@ -93,6 +95,11 @@ public class GameManager : Manager<GameManager>
             InstantiateLevel();
         }
         
+    }
+    public void SelectLevelChanged()
+    {
+        m_SelectLevel = m_LevelDropdown.value;
+        Debug.Log("SelectLevelChanged " + m_SelectLevel);
     }
     private void InstantiateLevel()
     {
@@ -147,6 +154,11 @@ public class GameManager : Manager<GameManager>
     {
         Menu();
         InitNewGame(); // essentiellement pour que les statistiques du jeu soient mise à jour en HUD
+        m_LevelDropdown.ClearOptions();
+        for (int i = 0; i < m_Level.Count; i++)
+        {
+            m_LevelDropdown.options.Add(new TMP_Dropdown.OptionData("Level " + (i + 1)));
+        }
         yield break;
     }
     #endregion
