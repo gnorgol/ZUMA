@@ -20,7 +20,8 @@ public class BezierSpline : MonoBehaviour
     [SerializeField] int nbBall;
     [SerializeField] int idLevel;
     LineRenderer lineRenderer;
-
+    private bool IsSelected = false;
+    private bool isExemple = false;
 
     #region Event listener
 
@@ -38,6 +39,9 @@ public class BezierSpline : MonoBehaviour
         EventManager.Instance.AddListener<putBallBackEvent>(putBallBack);
         EventManager.Instance.AddListener<CheckMatchBallsEvent>(CheckMatchBalls);
         EventManager.Instance.AddListener<MainMenuButtonClickedEvent>(GameMenu);
+        EventManager.Instance.AddListener<InstantiateLevelExempleEvent>(InstantiateLevelExemple);
+        EventManager.Instance.AddListener<DestroyLevelExempleEvent>(DestroyLevelExemple);
+
     }
 
     public void UnsubscribeEvents()
@@ -46,6 +50,8 @@ public class BezierSpline : MonoBehaviour
         EventManager.Instance.RemoveListener<putBallBackEvent>(putBallBack);
         EventManager.Instance.RemoveListener<CheckMatchBallsEvent>(CheckMatchBalls);
         EventManager.Instance.RemoveListener<MainMenuButtonClickedEvent>(GameMenu);
+        EventManager.Instance.RemoveListener<InstantiateLevelExempleEvent>(InstantiateLevelExemple);
+        EventManager.Instance.RemoveListener<DestroyLevelExempleEvent>(DestroyLevelExemple);
     }
     #endregion
     private void GameMenu(MainMenuButtonClickedEvent e)
@@ -151,7 +157,7 @@ public class BezierSpline : MonoBehaviour
     private void Start()
     {
         List<Vector3> positions = m_CtrlTransform.Select(item => item.position).ToList();
-
+/*
         Vector3 p1 = positions[0];
         Vector3 p2 = positions[1];
         Vector3 p3 = positions[2];
@@ -177,11 +183,15 @@ public class BezierSpline : MonoBehaviour
                 Vector3 pt = ComputeBezierPos(P0, P1, P2, P3, k);
                 m_Pts.Add(pt);
             }
-        }
+        }*/
 
         m_MyCurve = new CurveLinearInterpo(m_CtrlTransform, m_PtsDensity, m_IsClosed);
         lineRenderer.positionCount = m_MyCurve.ListPts.Count;
         lineRenderer.SetPositions(m_MyCurve.ListPts.ToArray());
+        if (isExemple)
+        {
+            _Repeat = true;
+        }
     }
 
     private void Update()
@@ -204,7 +214,7 @@ public class BezierSpline : MonoBehaviour
             if (i == 0 && m_MyCurve.GetPositionFromDistance(distance, out currentposition, out currentIndex))
             {
 
-                if (currentIndex == m_MyCurve.NPoints - 2)
+                if (currentIndex == m_MyCurve.NPoints - 2 && !isExemple)
                 {
                     DestroyAllMovingObject();
                     EventManager.Instance.Raise(new FinishCurveEvent());
@@ -230,15 +240,22 @@ public class BezierSpline : MonoBehaviour
 
 
     }
+    private void InstantiateLevelExemple(InstantiateLevelExempleEvent e)
+    {
+        isExemple = true;
+    }
+    private void DestroyLevelExemple(DestroyLevelExempleEvent e)
+    {
+        DestroyAllMovingObject();
+    }
     public void DestroyAllMovingObject()
     {
         foreach (var destroyFinishCurve in ListeMovingObject)
         {
             Destroy(destroyFinishCurve.gameObject);
         }
+        ListeMovingObject.Clear();
     }
-
-
    /* private void OnDrawGizmos()
     {
         if (m_Pts.Count > 0)

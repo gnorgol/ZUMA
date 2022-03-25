@@ -10,6 +10,9 @@ public class GameMenuEvent : SDD.Events.Event
 public class GamePlayEvent : SDD.Events.Event
 {
 }
+public class GamePlaySelectedEvent : SDD.Events.Event
+{
+}
 public class GamePauseEvent : SDD.Events.Event
 {
 }
@@ -37,6 +40,9 @@ public class EscapeButtonClickedEvent : SDD.Events.Event
 public class PlayButtonClickedEvent : SDD.Events.Event
 {
 }
+public class PlayButtonSelectLevelClickedEvent : SDD.Events.Event
+{
+}
 public class ResumeButtonClickedEvent : SDD.Events.Event
 {
 }
@@ -45,7 +51,11 @@ public class MainMenuButtonClickedEvent : SDD.Events.Event
 }
 
 public class QuitButtonClickedEvent : SDD.Events.Event
-{ }
+{
+}
+public class SelectLevelButtonHasBeenClickedEvent : SDD.Events.Event
+{
+}
 #endregion
 
 #region Score Event
@@ -81,4 +91,11 @@ public class GameLevelChangedEvent : SDD.Events.Event
 public class FinishCurveEvent : SDD.Events.Event
 {
 }
+public class InstantiateLevelExempleEvent : SDD.Events.Event
+{
+}
+public class DestroyLevelExempleEvent : SDD.Events.Event
+{
+}
+
 

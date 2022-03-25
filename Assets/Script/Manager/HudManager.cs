@@ -10,7 +10,8 @@ public class HudManager : Manager<HudManager>
 	[Header("HudManager")]
 	#region Labels & Values
 	[Header("Texts")]
-	[SerializeField] private TextMeshProUGUI m_TxtBestScore;
+	[SerializeField] private GameObject m_HUD;
+    [SerializeField] private TextMeshProUGUI m_TxtBestScore;
 	[SerializeField] private TextMeshProUGUI m_TxtScore;
 	[SerializeField] private TextMeshProUGUI m_TxtLevel;
 
@@ -38,8 +39,25 @@ public class HudManager : Manager<HudManager>
 	#region Callbacks to GameManager events
 	protected override void GameStatisticsChanged(GameStatisticsChangedEvent e)
 	{
-		m_TxtBestScore.text = "Best Score : " + e.eBestScore.ToString();
+        //change the text of the score and the best score
+        m_TxtBestScore.text = "Best Score : " + e.eBestScore.ToString();
 		m_TxtScore.text = "Score : " + e.eScore.ToString();
 	}
-	#endregion
+    protected override void GamePlay(GamePlayEvent e)
+    {
+        //Show HUD
+        m_HUD.SetActive(true);
+    }
+    protected override void GameOver(GameOverEvent e)
+    {
+        //Hide HUD
+        m_HUD.SetActive(false);
+    }
+    protected override void GameMenu(GameMenuEvent e)
+    {
+        //Hide HUD
+        m_HUD.SetActive(false);
+    }
+    
+    #endregion
 }

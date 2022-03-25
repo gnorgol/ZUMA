@@ -76,9 +76,10 @@ public class GameManager : Manager<GameManager>
     [SerializeField]
     private List<GameObject> m_Level;
     [SerializeField] TMP_Dropdown m_LevelDropdown;
-    private int m_SelectLevel;
+    private int m_SelectLevel = 1;
     private GameObject currentLevel;
     int currentIdLevel = 0;
+    private GameObject LevelExemple;
     private void GameLevelChanged(GameLevelChangedEvent e)
     {
         if (currentIdLevel != 0)
@@ -98,14 +99,39 @@ public class GameManager : Manager<GameManager>
     }
     public void SelectLevelChanged()
     {
-        m_SelectLevel = m_LevelDropdown.value;
+        m_SelectLevel = m_LevelDropdown.value + 1;
+        InstantiateLevelExemple();
         Debug.Log("SelectLevelChanged " + m_SelectLevel);
+    }
+
+    private void InstantiateLevelExemple()
+    {
+        DestroyLevelExemple();
+        LevelExemple = m_Level[m_SelectLevel - 1];
+        LevelExemple = Instantiate(LevelExemple, LevelExemple.transform.position, Quaternion.identity);
+        LevelExemple.name = "LevelExemple_" + m_SelectLevel;
+        SetTimeScale(1);
+        EventManager.Instance.Raise(new InstantiateLevelExempleEvent());
+    }
+    private void DestroyLevelExemple()
+    {
+        // if level exemple exist destroy it
+        if (LevelExemple != null)
+        {
+            EventManager.Instance.Raise(new DestroyLevelExempleEvent());
+            Destroy(LevelExemple);
+        }
     }
     private void InstantiateLevel()
     {
         GameObject level = m_Level[currentIdLevel-1];
         currentLevel = Instantiate(level,level.transform.position,Quaternion.identity);
     }
+    private void SelectLevelButtonHasBeenClicked(SelectLevelButtonHasBeenClickedEvent e)
+    {
+        InstantiateLevelExemple();
+    }
+
     #endregion
     #region Events' subscription
     public override void SubscribeEvents()
@@ -115,9 +141,11 @@ public class GameManager : Manager<GameManager>
         //MainMenuManager
         EventManager.Instance.AddListener<MainMenuButtonClickedEvent>(MainMenuButtonClicked);
         EventManager.Instance.AddListener<PlayButtonClickedEvent>(PlayButtonClicked);
+        EventManager.Instance.AddListener<PlayButtonSelectLevelClickedEvent>(PlayButtonSelectLevelClicked);
         EventManager.Instance.AddListener<ResumeButtonClickedEvent>(ResumeButtonClicked);
         EventManager.Instance.AddListener<EscapeButtonClickedEvent>(EscapeButtonClicked);
         EventManager.Instance.AddListener<QuitButtonClickedEvent>(QuitButtonClicked);
+        EventManager.Instance.AddListener<SelectLevelButtonHasBeenClickedEvent>(SelectLevelButtonHasBeenClicked);
         //Score Item
         EventManager.Instance.AddListener<ScoreItemEvent>(ScoreHasBeenGained);
 
@@ -136,10 +164,11 @@ public class GameManager : Manager<GameManager>
         //MainMenuManager
         EventManager.Instance.RemoveListener<MainMenuButtonClickedEvent>(MainMenuButtonClicked);
         EventManager.Instance.RemoveListener<PlayButtonClickedEvent>(PlayButtonClicked);
+        EventManager.Instance.RemoveListener<PlayButtonSelectLevelClickedEvent>(PlayButtonSelectLevelClicked);
         EventManager.Instance.RemoveListener<ResumeButtonClickedEvent>(ResumeButtonClicked);
         EventManager.Instance.RemoveListener<EscapeButtonClickedEvent>(EscapeButtonClicked);
         EventManager.Instance.RemoveListener<QuitButtonClickedEvent>(QuitButtonClicked);
-
+        EventManager.Instance.RemoveListener<SelectLevelButtonHasBeenClickedEvent>(SelectLevelButtonHasBeenClicked);
         //Score Item
         EventManager.Instance.RemoveListener<ScoreItemEvent>(ScoreHasBeenGained);
         //Level
@@ -148,6 +177,8 @@ public class GameManager : Manager<GameManager>
 
         EventManager.Instance.RemoveListener<FinishCurveEvent>(FinishCurve);
     }
+
+
     #endregion
     #region Manager implementation
     protected override IEnumerator InitCoroutine()
@@ -190,9 +221,14 @@ public class GameManager : Manager<GameManager>
 
     private void PlayButtonClicked(PlayButtonClickedEvent e)
     {
-        Play();
+        Play(false);
     }
-
+    private void PlayButtonSelectLevelClicked(PlayButtonSelectLevelClickedEvent e)
+    {
+        m_SelectLevel = 1;
+        DestroyLevelExemple();
+        Play(true);
+    }
     private void ResumeButtonClicked(ResumeButtonClickedEvent e)
     {
         Resume();
@@ -214,6 +250,7 @@ public class GameManager : Manager<GameManager>
     private void Menu()
     {
         SetTimeScale(0);
+        DestroyLevelExemple();
         m_Player.SetActive(false);
         m_GameState = GameState.gameMenu;
         Destroy(currentLevel);
@@ -221,15 +258,27 @@ public class GameManager : Manager<GameManager>
         EventManager.Instance.Raise(new GameMenuEvent());
     }
 
-    private void Play()
+    private void Play(bool IsSelected)
     {
+        if (!IsSelected)
+        {
+            InitNewGame();
+            m_Player.SetActive(true);
+            SetTimeScale(1);
+            EventManager.Instance.Raise(new GameLevelChangedEvent() { eLevel = 1 });
+            m_GameState = GameState.gamePlay;
+            EventManager.Instance.Raise(new GamePlayEvent());
+        }
+        else
+        {
+            InitNewGame();
+            m_Player.SetActive(true);
+            SetTimeScale(1);
+            EventManager.Instance.Raise(new GameLevelChangedEvent() { eLevel = m_SelectLevel });
+            m_GameState = GameState.gamePlay;
+            EventManager.Instance.Raise(new GamePlayEvent());
+        }
 
-        InitNewGame();
-        m_Player.SetActive(true);
-        SetTimeScale(1);
-        EventManager.Instance.Raise(new GameLevelChangedEvent() { eLevel = 1 });
-        m_GameState = GameState.gamePlay;
-        EventManager.Instance.Raise(new GamePlayEvent());
 
     }
 
