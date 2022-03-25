@@ -14,7 +14,7 @@ public class MenuManager : Manager<MenuManager>
     [SerializeField] GameObject m_PanelInGameMenu;
     [SerializeField] GameObject m_PanelGameVictory;
     [SerializeField] GameObject m_PanelGameOver;
-
+    [SerializeField] GameObject m_PanelSelectLevel;
     List<GameObject> m_AllPanels;
 
     #endregion
@@ -65,7 +65,8 @@ public class MenuManager : Manager<MenuManager>
         m_AllPanels.Add(m_PanelInGameMenu);
         m_AllPanels.Add(m_PanelGameVictory);
         m_AllPanels.Add(m_PanelGameOver);
-       
+        m_AllPanels.Add(m_PanelSelectLevel);
+
     }
 
     void OpenPanel(GameObject panel)
@@ -93,7 +94,10 @@ public class MenuManager : Manager<MenuManager>
     {
         EventManager.Instance.Raise(new PlayButtonClickedEvent());
     }
-
+    public void SelectLevelButtonHasBeenClicked()
+    {
+        OpenPanel(m_PanelSelectLevel);
+    }
     public void ResumeButtonHasBeenClicked()
     {
         EventManager.Instance.Raise(new ResumeButtonClickedEvent());
