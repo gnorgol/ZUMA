@@ -94,8 +94,13 @@ public class MenuManager : Manager<MenuManager>
     {
         EventManager.Instance.Raise(new PlayButtonClickedEvent());
     }
+    public void PlayButtonSelectLevelHasBeenClicked()
+    {
+        EventManager.Instance.Raise(new PlayButtonSelectLevelClickedEvent());
+    }
     public void SelectLevelButtonHasBeenClicked()
     {
+        EventManager.Instance.Raise(new SelectLevelButtonHasBeenClickedEvent());
         OpenPanel(m_PanelSelectLevel);
     }
     public void ResumeButtonHasBeenClicked()
@@ -125,6 +130,7 @@ public class MenuManager : Manager<MenuManager>
     protected override void GamePlay(GamePlayEvent e)
     {
         ClosePanel(m_PanelMainMenu);
+        ClosePanel(m_PanelSelectLevel);
     }
 
     protected override void GamePause(GamePauseEvent e)
