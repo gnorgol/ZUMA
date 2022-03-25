@@ -30,11 +30,13 @@ public class HudManager : Manager<HudManager>
 	public override void SubscribeEvents()
 	{
 		base.SubscribeEvents();
+		EventManager.Instance.AddListener<GameLevelChangedEvent>(GameLevelChanged);
 	}
 	public override void UnsubscribeEvents()
 	{
 		base.UnsubscribeEvents();
-	}
+        EventManager.Instance.RemoveListener<GameLevelChangedEvent>(GameLevelChanged);
+    }
 	#endregion
 	#region Callbacks to GameManager events
 	protected override void GameStatisticsChanged(GameStatisticsChangedEvent e)
@@ -58,6 +60,10 @@ public class HudManager : Manager<HudManager>
         //Hide HUD
         m_HUD.SetActive(false);
     }
-    
+    private void GameLevelChanged(GameLevelChangedEvent e)
+    {
+        //change the text of the level
+        m_TxtLevel.text = "Level : " + e.eLevel.ToString();
+    }
     #endregion
 }

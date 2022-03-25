@@ -37,17 +37,6 @@ public class GameManager : Manager<GameManager>
         get { return PlayerPrefs.GetFloat("BEST_SCORE", 0); }
         set { PlayerPrefs.SetFloat("BEST_SCORE", value); }
     }
-    public float NeedTuto
-    {
-        get { return PlayerPrefs.GetFloat("NeedTuto", 0); }
-        set { PlayerPrefs.SetFloat("NeedTuto", value); }
-    }
-    public void finishTuto()
-    {
-
-        NeedTuto = 1;
-
-    }
 
     void IncrementScore(float increment)
     {
@@ -80,26 +69,38 @@ public class GameManager : Manager<GameManager>
     private GameObject currentLevel;
     int currentIdLevel = 0;
     private GameObject LevelExemple;
+    private bool isPlayingSelectedLevel = false;
     private void GameLevelChanged(GameLevelChangedEvent e)
     {
         if (currentIdLevel != 0)
         {
-            Destroy(currentLevel);
+            DestroyCurrentLevel();
         }
-        currentIdLevel = e.eLevel;
-        if (currentIdLevel > m_Level.Count)
+        if (!isPlayingSelectedLevel)
         {
-            Victory();
+            currentIdLevel = e.eLevel;
+            if (currentIdLevel > m_Level.Count)
+            {
+                Victory();
+            }
+            else
+            {
+                InstantiateLevel();
+            }
         }
         else
         {
-            InstantiateLevel();
+            Menu();
         }
+
         
     }
     public void SelectLevelChanged()
     {
-        m_SelectLevel = m_LevelDropdown.value + 1;
+        if (m_LevelDropdown.value != m_SelectLevel)
+        {
+            m_SelectLevel = m_LevelDropdown.value + 1;
+        }
         InstantiateLevelExemple();
         Debug.Log("SelectLevelChanged " + m_SelectLevel);
     }
@@ -224,8 +225,7 @@ public class GameManager : Manager<GameManager>
         Play(false);
     }
     private void PlayButtonSelectLevelClicked(PlayButtonSelectLevelClickedEvent e)
-    {
-        m_SelectLevel = 1;
+    {  
         DestroyLevelExemple();
         Play(true);
     }
@@ -245,15 +245,26 @@ public class GameManager : Manager<GameManager>
     }
     #endregion
 
+    private void DestroyCurrentLevel()
+    {
+        if (currentLevel != null)
+        {
+            Destroy(currentLevel);
+        }
+    }
+
 
     #region GameState methods
     private void Menu()
     {
-        SetTimeScale(0);
         DestroyLevelExemple();
+        DestroyCurrentLevel();
+        currentIdLevel = 0;
+        isPlayingSelectedLevel = false;
         m_Player.SetActive(false);
         m_GameState = GameState.gameMenu;
-        Destroy(currentLevel);
+        SetTimeScale(0);
+
         /*if (MusicLoopsManager.Instance) MusicLoopsManager.Instance.PlayMusic(Constants.MENU_MUSIC);*/
         EventManager.Instance.Raise(new GameMenuEvent());
     }
@@ -265,8 +276,10 @@ public class GameManager : Manager<GameManager>
             InitNewGame();
             m_Player.SetActive(true);
             SetTimeScale(1);
+            
             EventManager.Instance.Raise(new GameLevelChangedEvent() { eLevel = 1 });
             m_GameState = GameState.gamePlay;
+            isPlayingSelectedLevel = false;
             EventManager.Instance.Raise(new GamePlayEvent());
         }
         else
@@ -276,6 +289,7 @@ public class GameManager : Manager<GameManager>
             SetTimeScale(1);
             EventManager.Instance.Raise(new GameLevelChangedEvent() { eLevel = m_SelectLevel });
             m_GameState = GameState.gamePlay;
+            isPlayingSelectedLevel = true;
             EventManager.Instance.Raise(new GamePlayEvent());
         }
 
@@ -284,7 +298,7 @@ public class GameManager : Manager<GameManager>
 
     private void Pause()
     {
-        /*if (!IsPlaying) return;*/
+        if (!IsPlaying) return;
         SetTimeScale(0);
         m_Player.SetActive(false);
         GameStateBeforePause = m_GameState;
@@ -308,7 +322,7 @@ public class GameManager : Manager<GameManager>
     }
     private void Victory()
     {
-        Destroy(currentLevel);
+        DestroyCurrentLevel();
         m_Player.SetActive(false);
         SetTimeScale(0);
         m_GameState = GameState.gameVictory;
@@ -316,7 +330,7 @@ public class GameManager : Manager<GameManager>
     }
     private void Over()
     {
-        Destroy(currentLevel);
+        DestroyCurrentLevel();
         m_Player.SetActive(false);
         SetTimeScale(0);
         m_GameState = GameState.gameOver;
