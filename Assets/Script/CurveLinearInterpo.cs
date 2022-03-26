@@ -9,6 +9,7 @@ public class CurveLinearInterpo
     bool _isClosed;
     float _Length = 0;
     bool _IsValid = false;
+    int index;
     private List<Vector3> _ListPts = new List<Vector3>();
     List<float> _ListLength = new List<float>();
     List<int> _ListIndex = new List<int>();
@@ -73,7 +74,6 @@ public class CurveLinearInterpo
     {
         position = Vector3.zero;
         segmentIndex = 0;
-        int index;
         int floorDistance;
         float distance = dist;
         if (!_IsValid)
@@ -111,6 +111,8 @@ public class CurveLinearInterpo
         float previousPointLength = _ListLength[index];
         float nextPointLength = _ListLength[index + 1];
         segmentIndex = index;
+       
+
         position = previousPoint + (nextPoint - previousPoint) * ((distance - previousPointLength) / (nextPointLength - previousPointLength));
 
 
