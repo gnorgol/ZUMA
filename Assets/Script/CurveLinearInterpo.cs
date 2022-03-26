@@ -47,6 +47,10 @@ public class CurveLinearInterpo
             Vector3 P3 = positions[i + 2];
             float ditance = Vector3.Distance(P1, P2);
             int nPts = (int)Mathf.Max(3, ditance * ptsDensity);
+            if (previousPoint == Vector3.zero)
+            {
+                previousPoint = ComputeBezierPos(P0, P1, P2, P3, 0);
+            }
             for (int j = 0; j < nPts; j++)
             {
                 int nPtsDenominator = (i == positions.Count - 3) && !isClosed ? nPts - 1 : nPts;
@@ -55,7 +59,6 @@ public class CurveLinearInterpo
                 _Length += Vector3.Distance(currentPoint, previousPoint);
                 floorLength = Mathf.FloorToInt(_Length);
                 _ListLength.Add(_Length);
-
                 for (int n = _ListIndex.Count; n < floorLength; n++)
                 {
                     _ListIndex.Add(Mathf.Max(_ListPts.Count - 1, 0));
@@ -88,14 +91,14 @@ public class CurveLinearInterpo
             {
                 distance = distance + _Length;
             }
-           distance %= _Length;
+            distance %= _Length;
         }
         else
         {
             distance = Mathf.Clamp(distance, 0, _Length);
         }
         floorDistance = Mathf.FloorToInt(distance);
-        
+
         index = _ListIndex[Mathf.Clamp(floorDistance, 0, _ListIndex.Count - 1)];
         while (_ListLength[index] < distance)
         {
@@ -111,7 +114,7 @@ public class CurveLinearInterpo
         float previousPointLength = _ListLength[index];
         float nextPointLength = _ListLength[index + 1];
         segmentIndex = index;
-       
+
 
         position = previousPoint + (nextPoint - previousPoint) * ((distance - previousPointLength) / (nextPointLength - previousPointLength));
 
@@ -133,13 +136,13 @@ public class CurveLinearInterpo
         float delta;
         float t = -1;
         int stopWhile = 0;
-        int index = startIndex+1;
+        int index = startIndex + 1;
         if (!IsValid && (direction == 1 || direction == -1))
         {
             return false;
         }
 
-        while ((t < 0 || 1 < t) && stopWhile < _ListPts.Count) 
+        while ((t < 0 || 1 < t) && stopWhile < _ListPts.Count)
         {
             index = index + direction;
             if (index < 0 && direction == -1)
@@ -170,7 +173,7 @@ public class CurveLinearInterpo
                 t = -1;
             }
             stopWhile++;
-        } 
+        }
 
         segmentIndex = index;
         return GetPositionFromDistance(_ListLength[index] + t * ABLength.magnitude + 0 * direction, out position);
