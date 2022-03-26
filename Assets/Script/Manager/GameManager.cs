@@ -93,16 +93,13 @@ public class GameManager : Manager<GameManager>
             Menu();
         }
 
-        
+
     }
     public void SelectLevelChanged()
     {
-        if (m_LevelDropdown.value != m_SelectLevel)
-        {
-            m_SelectLevel = m_LevelDropdown.value + 1;
-        }
+        m_SelectLevel = m_LevelDropdown.value + 1;
+        //Show Selected Level
         InstantiateLevelExemple();
-        Debug.Log("SelectLevelChanged " + m_SelectLevel);
     }
 
     private void InstantiateLevelExemple()
@@ -116,7 +113,6 @@ public class GameManager : Manager<GameManager>
     }
     private void DestroyLevelExemple()
     {
-        // if level exemple exist destroy it
         if (LevelExemple != null)
         {
             EventManager.Instance.Raise(new DestroyLevelExempleEvent());
@@ -125,8 +121,8 @@ public class GameManager : Manager<GameManager>
     }
     private void InstantiateLevel()
     {
-        GameObject level = m_Level[currentIdLevel-1];
-        currentLevel = Instantiate(level,level.transform.position,Quaternion.identity);
+        GameObject level = m_Level[currentIdLevel - 1];
+        currentLevel = Instantiate(level, level.transform.position, Quaternion.identity);
     }
     private void SelectLevelButtonHasBeenClicked(SelectLevelButtonHasBeenClickedEvent e)
     {
@@ -152,7 +148,6 @@ public class GameManager : Manager<GameManager>
 
         //Level
         EventManager.Instance.AddListener<GameLevelChangedEvent>(GameLevelChanged);
-
         EventManager.Instance.AddListener<FinishCurveEvent>(FinishCurve);
     }
 
@@ -198,7 +193,7 @@ public class GameManager : Manager<GameManager>
     void InitNewGame(bool raiseStatsEvent = true)
     {
         SetScore(0);
-        
+
     }
     #endregion
 
@@ -225,7 +220,7 @@ public class GameManager : Manager<GameManager>
         Play(false);
     }
     private void PlayButtonSelectLevelClicked(PlayButtonSelectLevelClickedEvent e)
-    {  
+    {
         DestroyLevelExemple();
         Play(true);
     }
@@ -276,7 +271,7 @@ public class GameManager : Manager<GameManager>
             InitNewGame();
             m_Player.SetActive(true);
             SetTimeScale(1);
-            
+
             EventManager.Instance.Raise(new GameLevelChangedEvent() { eLevel = 1 });
             m_GameState = GameState.gamePlay;
             isPlayingSelectedLevel = false;
