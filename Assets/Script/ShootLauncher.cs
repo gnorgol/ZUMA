@@ -6,7 +6,8 @@ public class ShootLauncher : MonoBehaviour
 {
     public GameObject Ball;
     [SerializeField] private float ballSpeed;
-    public GameObject instanceBall;
+    private GameObject instanceBallForward;
+    private GameObject instanceBallBack;
     [SerializeField] private Material ColorYellow;
     [SerializeField] private Material ColorRed;
     [SerializeField] private Material ColorGreen;
@@ -19,7 +20,8 @@ public class ShootLauncher : MonoBehaviour
     private void Start()
     {
         m_NextShootTime = Time.time;
-        CreateBall();
+        CreateBallForward();
+        CreateBallBack();
     }
     private void Update()
     {
@@ -27,27 +29,39 @@ public class ShootLauncher : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Mouse0) && Time.time > m_NextShootTime)
         {
             Shoot();
-            CreateBall();
+            CreateBallForward();
+            SwapBall();
             m_NextShootTime = Time.time + m_CoolDownDuration;
         }
         if (Input.GetKeyDown(KeyCode.Mouse1))
         {
-            ChangeColor();
+            //ChangeColor();
+            SwapBall();
         }
         
     }
 
     private void Shoot()
     {
-        shootDir = (shootEndPosition.position - instanceBall.transform.position).normalized;
-        instanceBall.GetComponent<Ball>().Setup(shootDir);
+        shootDir = (shootEndPosition.position - instanceBallForward.transform.position).normalized;
+        instanceBallForward.GetComponent<Ball>().Setup(shootDir);
 
     }
-
+    //Fonction to swap the instanceBallForward and instanceBallBack
+    private void SwapBall()
+    {
+        GameObject temp = instanceBallForward;
+        instanceBallForward = instanceBallBack;
+        instanceBallBack = temp;
+    }
     private void SetBallPostion()
     {
-        instanceBall.transform.forward = transform.forward;
-        instanceBall.transform.position = transform.position + transform.right * 2.0f;
+        //Set the instanceBallForward in front of the player
+        instanceBallForward.transform.forward = transform.forward;
+        instanceBallForward.transform.position = transform.position + transform.right * 2.0f;
+        //Set the instanceBallBack in back of the player
+        instanceBallBack.transform.forward = transform.forward;
+        instanceBallBack.transform.position = transform.position - transform.right * 2.0f;
     }
 
     private void ChangeColor()
@@ -57,17 +71,26 @@ public class ShootLauncher : MonoBehaviour
         {
             ballColor = 0;
         }
-
-        SetBallColor(instanceBall, ballColor);
+        SetBallColor(instanceBallForward, ballColor);
+        //if instanceBallBack not set , set is ball color
+        if (instanceBallBack != null)
+        {
+            SetBallColor(instanceBallBack, ballColor);
+        }
     }
-    private void CreateBall()
+    private void CreateBallForward()
     {
-        instanceBall = Instantiate(Ball, transform.position, Quaternion.identity);
-        instanceBall.SetActive(true);
-
-        instanceBall.tag = "NewBall";
-
-        SetRandomBallColor(instanceBall);
+        instanceBallForward = Instantiate(Ball, transform.position, Quaternion.identity);
+        instanceBallForward.SetActive(true);
+        instanceBallForward.tag = "NewBall";
+        SetRandomBallColor(instanceBallForward);
+    }
+    private void CreateBallBack()
+    {
+        instanceBallBack = Instantiate(Ball, transform.position, Quaternion.identity);
+        instanceBallBack.SetActive(true);
+        instanceBallBack.tag = "NewBall";
+        SetRandomBallColor(instanceBallBack);
     }
 
     public enum BallColor
