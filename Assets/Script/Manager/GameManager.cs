@@ -145,7 +145,7 @@ public class GameManager : Manager<GameManager>
         EventManager.Instance.AddListener<QuitButtonClickedEvent>(QuitButtonClicked);
         EventManager.Instance.AddListener<SelectLevelButtonHasBeenClickedEvent>(SelectLevelButtonHasBeenClicked);
         //Score Item
-        EventManager.Instance.AddListener<ScoreItemEvent>(ScoreHasBeenGained);
+        EventManager.Instance.AddListener<GainScoreEvent>(ScoreHasBeenGained);
 
         //Level
         EventManager.Instance.AddListener<GameLevelChangedEvent>(GameLevelChanged);
@@ -167,7 +167,7 @@ public class GameManager : Manager<GameManager>
         EventManager.Instance.RemoveListener<QuitButtonClickedEvent>(QuitButtonClicked);
         EventManager.Instance.RemoveListener<SelectLevelButtonHasBeenClickedEvent>(SelectLevelButtonHasBeenClicked);
         //Score Item
-        EventManager.Instance.RemoveListener<ScoreItemEvent>(ScoreHasBeenGained);
+        EventManager.Instance.RemoveListener<GainScoreEvent>(ScoreHasBeenGained);
         //Level
         EventManager.Instance.RemoveListener<GameLevelChangedEvent>(GameLevelChanged);
 
@@ -200,7 +200,7 @@ public class GameManager : Manager<GameManager>
 
 
     #region Callbacks to events issued by Score items
-    private void ScoreHasBeenGained(ScoreItemEvent e)
+    private void ScoreHasBeenGained(GainScoreEvent e)
     {
         if (IsPlaying)
         {

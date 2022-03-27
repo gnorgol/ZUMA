@@ -4817,6 +4817,7 @@ MonoBehaviour:
   ClickButton: {fileID: 8300000, guid: 98caa1d102f87fa4e88e4aabafcd93e6, type: 3}
   MusicMenu: {fileID: 8300000, guid: c02a583a841e19a4fb1d130c922e4663, type: 3}
   MusicGameplay: {fileID: 8300000, guid: 89201fc6b1f60ff45a7aec637a7bc244, type: 3}
+  GainScore: {fileID: 8300000, guid: 223c0c99f823f60498d0627956d05a1a, type: 3}
 --- !u!82 &1317305414
 AudioSource:
   m_ObjectHideFlags: 0
