@@ -59,7 +59,7 @@ public class SelectLevelButtonHasBeenClickedEvent : SDD.Events.Event
 #endregion
 
 #region Score Event
-public class ScoreItemEvent : SDD.Events.Event
+public class GainScoreEvent : SDD.Events.Event
 {
 	public float eScore;
 }

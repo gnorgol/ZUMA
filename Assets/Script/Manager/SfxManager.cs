@@ -6,7 +6,7 @@ using System;
 
 public class SfxManager : MonoBehaviour
 {
-    [SerializeField] private AudioClip PlayerShootSound,ClickButton,MusicMenu,MusicGameplay;
+    [SerializeField] private AudioClip PlayerShootSound,ClickButton,MusicMenu,MusicGameplay,GainScore;
     private AudioSource audioSrc;
     private void OnEnable()
     {
@@ -21,13 +21,21 @@ public class SfxManager : MonoBehaviour
         EventManager.Instance.AddListener<PlayerShootEvent>(OnPlayerShoot);
         EventManager.Instance.AddListener<GameMenuEvent>(OnGameMenu);
         EventManager.Instance.AddListener<GamePlayEvent>(OnGamePlay);
+        EventManager.Instance.AddListener<GainScoreEvent>(OnGainScore);
     }
     private void UnsubscribeEvents()
     {
         EventManager.Instance.RemoveListener<PlayerShootEvent>(OnPlayerShoot);
         EventManager.Instance.RemoveListener<GameMenuEvent>(OnGameMenu);
         EventManager.Instance.RemoveListener<GamePlayEvent>(OnGamePlay);
+        EventManager.Instance.RemoveListener<GainScoreEvent>(OnGainScore);
 
+
+    }
+
+    private void OnGainScore(GainScoreEvent e)
+    {
+        audioSrc.PlayOneShot(GainScore);
     }
 
     private void OnPlayerShoot(PlayerShootEvent e)
