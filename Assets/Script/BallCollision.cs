@@ -12,14 +12,15 @@ public class BallCollision : MonoBehaviour
         {
             stopCollision = true;
             this.gameObject.GetComponent<BallCollision>().enabled = false;
-           
-            this.GetComponent<Rigidbody>().velocity = Vector2.zero;
-            this.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.FreezeAll;
+            Destroy(this.GetComponent<Rigidbody>());
+
+
             this.gameObject.tag = "ActiveBalls";
             ContactPoint contact = collision.contacts[0];
             Vector3 CollisionDir = contact.point - collision.transform.position;
             float angle = Vector3.Angle(CollisionDir, collision.transform.forward);
-            if (angle > 90)
+
+            if (angle < 90)
             {
                 //Place la ball devant
                 EventManager.Instance.Raise(new putBallForwardEvent() { target = collision.gameObject, ball = this.gameObject });
@@ -31,7 +32,8 @@ public class BallCollision : MonoBehaviour
             }
             EventManager.Instance.Raise(new CheckMatchBallsEvent() { ball = this.gameObject });
             //this.gameObject.GetComponent<BallCollision>().enabled = false;
-
+            Destroy(this.GetComponent<Ball>());
+            Destroy(this.GetComponent<BallCollision>());
         }
     }
 }
