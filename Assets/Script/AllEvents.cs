@@ -100,7 +100,9 @@ public class InstantiateLevelExempleEvent : SDD.Events.Event
 public class DestroyLevelExempleEvent : SDD.Events.Event
 {
 }
-
+public class DestroyInstanceBallEvent : SDD.Events.Event
+{
+}
 #region Sfx Event
 public class PlayerShootEvent : SDD.Events.Event
 {

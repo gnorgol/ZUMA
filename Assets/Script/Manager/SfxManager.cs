@@ -6,7 +6,7 @@ using System;
 
 public class SfxManager : MonoBehaviour
 {
-    [SerializeField] private AudioClip PlayerShootSound,ClickButton;
+    [SerializeField] private AudioClip PlayerShootSound,ClickButton,MusicMenu,MusicGameplay;
     private AudioSource audioSrc;
     private void OnEnable()
     {
@@ -19,10 +19,14 @@ public class SfxManager : MonoBehaviour
     private void SubscribeEvents()
     {
         EventManager.Instance.AddListener<PlayerShootEvent>(OnPlayerShoot);
+        EventManager.Instance.AddListener<GameMenuEvent>(OnGameMenu);
+        EventManager.Instance.AddListener<GamePlayEvent>(OnGamePlay);
     }
     private void UnsubscribeEvents()
     {
         EventManager.Instance.RemoveListener<PlayerShootEvent>(OnPlayerShoot);
+        EventManager.Instance.RemoveListener<GameMenuEvent>(OnGameMenu);
+        EventManager.Instance.RemoveListener<GamePlayEvent>(OnGamePlay);
 
     }
 
@@ -30,17 +34,28 @@ public class SfxManager : MonoBehaviour
     {
         audioSrc.PlayOneShot(PlayerShootSound);
     }
-    public void PlayClickButton()
+    private void OnGameMenu(GameMenuEvent e)
     {
-        audioSrc.PlayOneShot(ClickButton);
+        audioSrc.clip = MusicMenu;
+        audioSrc.Play();
     }
+    private void OnGamePlay(GamePlayEvent e)
+    {
+        audioSrc.clip = MusicGameplay;
+        audioSrc.Play();
+    }
+
+
     private void Start()
     {
         
         audioSrc = GetComponent<AudioSource>();
     }
-    
-    
-    
-    
+
+
+    public void PlayClickButton()
+    {
+        audioSrc.PlayOneShot(ClickButton);
+    }
+
 }

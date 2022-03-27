@@ -60,6 +60,7 @@ public class GameManager : Manager<GameManager>
     #region Player
     [SerializeField]
     private GameObject m_Player;
+    [SerializeField] private GameObject m_Ground;
     #endregion
     #region Level
     [SerializeField]
@@ -256,46 +257,40 @@ public class GameManager : Manager<GameManager>
         DestroyCurrentLevel();
         currentIdLevel = 0;
         isPlayingSelectedLevel = false;
+        EventManager.Instance.Raise(new DestroyInstanceBallEvent());
         m_Player.SetActive(false);
         m_GameState = GameState.gameMenu;
         SetTimeScale(0);
 
-        /*if (MusicLoopsManager.Instance) MusicLoopsManager.Instance.PlayMusic(Constants.MENU_MUSIC);*/
         EventManager.Instance.Raise(new GameMenuEvent());
     }
 
     private void Play(bool IsSelected)
     {
+        m_Ground.SetActive(true);
+        InitNewGame();
+        m_Player.SetActive(true);
+        SetTimeScale(1);
         if (!IsSelected)
         {
-            InitNewGame();
-            m_Player.SetActive(true);
-            SetTimeScale(1);
-
             EventManager.Instance.Raise(new GameLevelChangedEvent() { eLevel = 1 });
-            m_GameState = GameState.gamePlay;
             isPlayingSelectedLevel = false;
-            EventManager.Instance.Raise(new GamePlayEvent());
         }
         else
         {
-            InitNewGame();
-            m_Player.SetActive(true);
-            SetTimeScale(1);
             EventManager.Instance.Raise(new GameLevelChangedEvent() { eLevel = m_SelectLevel });
-            m_GameState = GameState.gamePlay;
             isPlayingSelectedLevel = true;
-            EventManager.Instance.Raise(new GamePlayEvent());
         }
-
-
+        m_GameState = GameState.gamePlay;
+        EventManager.Instance.Raise(new GamePlayEvent());
     }
 
     private void Pause()
     {
         if (!IsPlaying) return;
         SetTimeScale(0);
-        m_Player.SetActive(false);
+        //m_Player.SetActive(false);
+        m_Ground.SetActive(false);
         GameStateBeforePause = m_GameState;
         m_GameState = GameState.gamePause;
         EventManager.Instance.Raise(new GamePauseEvent());
@@ -305,6 +300,7 @@ public class GameManager : Manager<GameManager>
     {
         if (IsPlaying) return;
         m_Player.SetActive(true);
+        m_Ground.SetActive(true);
         SetTimeScale(1);
         m_GameState = GameStateBeforePause;
         EventManager.Instance.Raise(new GameResumeEvent());
@@ -330,7 +326,6 @@ public class GameManager : Manager<GameManager>
         SetTimeScale(0);
         m_GameState = GameState.gameOver;
         EventManager.Instance.Raise(new GameOverEvent());
-        //if(SfxManager.Instance) SfxManager.Instance.PlaySfx2D(Constants.GAMEOVER_SFX);
     }
 
     #endregion
