@@ -45,7 +45,6 @@ public class ShootLauncher : MonoBehaviour
 
     public void DestroyInstanceBall(DestroyInstanceBallEvent e)
     {
-        Debug.Log("DestroyInstanceBall");
         Destroy(instanceBallForward);
         Destroy(instanceBallBack);
     }

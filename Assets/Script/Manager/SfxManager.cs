@@ -36,8 +36,13 @@ public class SfxManager : MonoBehaviour
     }
     private void OnGameMenu(GameMenuEvent e)
     {
-        audioSrc.clip = MusicMenu;
-        audioSrc.Play();
+        //if MusicMenu is not play
+
+        if (audioSrc.clip != MusicMenu)
+        {
+            audioSrc.clip = MusicMenu;
+            audioSrc.Play();
+        }
     }
     private void OnGamePlay(GamePlayEvent e)
     {
