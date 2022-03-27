@@ -33,14 +33,21 @@ public class ShootLauncher : MonoBehaviour
     {
         EventManager.Instance.AddListener<GameLevelChangedEvent>(GameLevelChanged);
         EventManager.Instance.AddListener<AllColorsBallsCurveEvent>(AllColorsBallsCurve);
+        EventManager.Instance.AddListener<DestroyInstanceBallEvent>(DestroyInstanceBall);
     }
     private void UnsubscribeEvents()
     {
         EventManager.Instance.RemoveListener<GameLevelChangedEvent>(GameLevelChanged);
         EventManager.Instance.RemoveListener<AllColorsBallsCurveEvent>(AllColorsBallsCurve);
-
+        EventManager.Instance.RemoveListener<DestroyInstanceBallEvent>(DestroyInstanceBall);
     }
 
+
+    public void DestroyInstanceBall(DestroyInstanceBallEvent e)
+    {
+        Destroy(instanceBallForward);
+        Destroy(instanceBallBack);
+    }
     private void AllColorsBallsCurve(AllColorsBallsCurveEvent e)
     {
         _ListColorsCurve = e.ListColorsCurve;
@@ -61,21 +68,23 @@ public class ShootLauncher : MonoBehaviour
     private void Update()
     {
         SetBallPostion();
-        if (Input.GetKeyDown(KeyCode.Mouse0) && Time.time > m_NextShootTime)
+        if (GameManager.Instance.IsPlaying)
         {
-            Shoot();
-            CreateBallForward();
-            SwapBall();
-            m_NextShootTime = Time.time + m_CoolDownDuration;
+            if (Input.GetKeyDown(KeyCode.Mouse0) && Time.time > m_NextShootTime)
+            {
+                Shoot();
+                EventManager.Instance.Raise(new PlayerShootEvent());
+                CreateBallForward();
+                SwapBall();
+                m_NextShootTime = Time.time + m_CoolDownDuration;
+            }
+            if (Input.GetKeyDown(KeyCode.Mouse1))
+            {
+                //ChangeColor();
+                SwapBall();
+            }
+            CheckColorInstanceBall();
         }
-        if (Input.GetKeyDown(KeyCode.Mouse1))
-        {
-            //ChangeColor();
-            SwapBall();
-        }
-        CheckColorInstanceBall();
-
-
     }
     void CheckColorInstanceBall()
     {
@@ -90,7 +99,8 @@ public class ShootLauncher : MonoBehaviour
             ChangeColor(instanceBallBack);
         }
     }
-    void ResetInstanceBall() {
+    void ResetInstanceBall()
+    {
         //Destroy instanceBallForward and instanceBallBack
         Destroy(instanceBallForward);
         Destroy(instanceBallBack);
@@ -131,10 +141,10 @@ public class ShootLauncher : MonoBehaviour
         }
         SetBallColor(Ball, ballColor);
         //if instanceBallBack not set , set is ball color
-/*        if (instanceBallBack != null)
-        {
-            SetBallColor(instanceBallBack, ballColor);
-        }*/
+        /*        if (instanceBallBack != null)
+                {
+                    SetBallColor(instanceBallBack, ballColor);
+                }*/
     }
     private void CreateBallForward()
     {
@@ -163,7 +173,7 @@ public class ShootLauncher : MonoBehaviour
         ballColor = Random.Range(0, 4);
         SetBallColor(ball, ballColor);
     }
-    private void SetBallColor(GameObject ball,int indexColor)
+    private void SetBallColor(GameObject ball, int indexColor)
     {
         BallColor randomColor = (BallColor)indexColor;
         switch (randomColor)
