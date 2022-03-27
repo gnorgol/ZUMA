@@ -61,21 +61,23 @@ public class ShootLauncher : MonoBehaviour
     private void Update()
     {
         SetBallPostion();
-        if (Input.GetKeyDown(KeyCode.Mouse0) && Time.time > m_NextShootTime)
+        if (GameManager.Instance.IsPlaying)
         {
-            Shoot();
-            CreateBallForward();
-            SwapBall();
-            m_NextShootTime = Time.time + m_CoolDownDuration;
+            if (Input.GetKeyDown(KeyCode.Mouse0) && Time.time > m_NextShootTime)
+            {
+                Shoot();
+                EventManager.Instance.Raise(new PlayerShootEvent());
+                CreateBallForward();
+                SwapBall();
+                m_NextShootTime = Time.time + m_CoolDownDuration;
+            }
+            if (Input.GetKeyDown(KeyCode.Mouse1))
+            {
+                //ChangeColor();
+                SwapBall();
+            }
+            CheckColorInstanceBall();
         }
-        if (Input.GetKeyDown(KeyCode.Mouse1))
-        {
-            //ChangeColor();
-            SwapBall();
-        }
-        CheckColorInstanceBall();
-
-
     }
     void CheckColorInstanceBall()
     {

@@ -101,4 +101,13 @@ public class DestroyLevelExempleEvent : SDD.Events.Event
 {
 }
 
+#region Sfx Event
+public class PlayerShootEvent : SDD.Events.Event
+{
+}
+
+
+
+#endregion
+
 
