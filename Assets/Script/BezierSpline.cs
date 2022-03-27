@@ -62,12 +62,13 @@ public class BezierSpline : MonoBehaviour
     {
         int index = ListeMovingObject.IndexOf(e.target.transform);
         ListeMovingObject.Insert(index, e.ball.transform);
-
+        GetAllColorsMovingObject();
     }
     private void putBallBack(putBallBackEvent e)
     {
         int index = ListeMovingObject.IndexOf(e.target.transform);
         ListeMovingObject.Insert(index + 1, e.ball.transform);
+        GetAllColorsMovingObject();
     }
     private void CheckMatchBalls(CheckMatchBallsEvent e)
     {
@@ -123,6 +124,7 @@ public class BezierSpline : MonoBehaviour
             Destroy(item.gameObject);
         }
         ListeMovingObject.RemoveRange(index, range);
+        GetAllColorsMovingObject();
     }
 
 
@@ -152,8 +154,17 @@ public class BezierSpline : MonoBehaviour
             clone = Instantiate(ListBall[r], Vector3.zero, Quaternion.identity);
             ListeMovingObject.Add(clone.transform);
         }
+        GetAllColorsMovingObject();
     }
-
+    private void GetAllColorsMovingObject()
+    {
+        List<Color> ListeColor = new List<Color>();
+        foreach (var item in ListeMovingObject)
+        {
+            ListeColor.Add(item.GetComponent<Renderer>().material.GetColor("_Color"));
+        }
+        EventManager.Instance.Raise(new AllColorsBallsCurveEvent() { ListColorsCurve = ListeColor });
+    }
     private void Start()
     {
         List<Vector3> positions = m_CtrlTransform.Select(item => item.position).ToList();
@@ -255,6 +266,7 @@ public class BezierSpline : MonoBehaviour
             Destroy(destroyFinishCurve.gameObject);
         }
         ListeMovingObject.Clear();
+        GetAllColorsMovingObject();
     }
    /* private void OnDrawGizmos()
     {

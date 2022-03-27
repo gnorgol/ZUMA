@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using SDD.Events;
 
 public class ShootLauncher : MonoBehaviour
 {
@@ -16,12 +17,46 @@ public class ShootLauncher : MonoBehaviour
     float m_NextShootTime;
     [SerializeField] Transform shootEndPosition;
     Vector3 shootDir;
+    [SerializeField] List<Color> _ListColorsCurve;
     int ballColor;
+
+    #region Event listener
+    private void OnEnable()
+    {
+        SubscribeEvents();
+    }
+    private void OnDisable()
+    {
+        UnsubscribeEvents();
+    }
+    private void SubscribeEvents()
+    {
+        EventManager.Instance.AddListener<GameLevelChangedEvent>(GameLevelChanged);
+        EventManager.Instance.AddListener<AllColorsBallsCurveEvent>(AllColorsBallsCurve);
+    }
+    private void UnsubscribeEvents()
+    {
+        EventManager.Instance.RemoveListener<GameLevelChangedEvent>(GameLevelChanged);
+        EventManager.Instance.RemoveListener<AllColorsBallsCurveEvent>(AllColorsBallsCurve);
+
+    }
+
+    private void AllColorsBallsCurve(AllColorsBallsCurveEvent e)
+    {
+        _ListColorsCurve = e.ListColorsCurve;
+    }
+
+    private void GameLevelChanged(GameLevelChangedEvent e)
+    {
+        //Reset Instance Ball after level change
+        ResetInstanceBall();
+    }
+    #endregion
+
     private void Start()
     {
         m_NextShootTime = Time.time;
-        CreateBallForward();
-        CreateBallBack();
+
     }
     private void Update()
     {
@@ -38,9 +73,32 @@ public class ShootLauncher : MonoBehaviour
             //ChangeColor();
             SwapBall();
         }
-        
-    }
+        CheckColorInstanceBall();
 
+
+    }
+    void CheckColorInstanceBall()
+    {
+        //If Color InstanceBallForward is not in ListColorsCurve then change color
+        if (!_ListColorsCurve.Contains(instanceBallForward.GetComponent<Renderer>().material.color))
+        {
+            ChangeColor(instanceBallForward);
+        }
+        //If Color InstanceBallBack is not in ListColorsCurve then change color
+        if (!_ListColorsCurve.Contains(instanceBallBack.GetComponent<Renderer>().material.color))
+        {
+            ChangeColor(instanceBallBack);
+        }
+    }
+    void ResetInstanceBall() {
+        //Destroy instanceBallForward and instanceBallBack
+        Destroy(instanceBallForward);
+        Destroy(instanceBallBack);
+        //Re create instanceBallForward and instanceBallBack
+        CreateBallForward();
+        CreateBallBack();
+        SetBallPostion();
+    }
     private void Shoot()
     {
         shootDir = (shootEndPosition.position - instanceBallForward.transform.position).normalized;
@@ -64,19 +122,19 @@ public class ShootLauncher : MonoBehaviour
         instanceBallBack.transform.position = transform.position - transform.right * 2.0f;
     }
 
-    private void ChangeColor()
+    private void ChangeColor(GameObject Ball)
     {
         ballColor = ballColor + 1;
         if (System.Enum.GetNames(typeof(BallColor)).Length == ballColor)
         {
             ballColor = 0;
         }
-        SetBallColor(instanceBallForward, ballColor);
+        SetBallColor(Ball, ballColor);
         //if instanceBallBack not set , set is ball color
-        if (instanceBallBack != null)
+/*        if (instanceBallBack != null)
         {
             SetBallColor(instanceBallBack, ballColor);
-        }
+        }*/
     }
     private void CreateBallForward()
     {

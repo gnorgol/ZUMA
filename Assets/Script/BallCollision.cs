@@ -25,7 +25,6 @@ public class BallCollision : MonoBehaviour
                 EventManager.Instance.Raise(new putBallForwardEvent() { target = collision.gameObject, ball = this.gameObject });
             }
             else
-
             {
                 //Place la ball a l'arrier 
                 EventManager.Instance.Raise(new putBallBackEvent() { target = collision.gameObject, ball = this.gameObject });
