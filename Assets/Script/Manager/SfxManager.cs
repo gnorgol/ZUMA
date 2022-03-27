@@ -46,6 +46,7 @@ public class SfxManager : MonoBehaviour
     {
         //if MusicMenu is not play
 
+
         if (audioSrc.clip != MusicMenu)
         {
             audioSrc.clip = MusicMenu;
@@ -57,9 +58,7 @@ public class SfxManager : MonoBehaviour
         audioSrc.clip = MusicGameplay;
         audioSrc.Play();
     }
-
-
-    private void Start()
+    private void Awake()
     {
         
         audioSrc = GetComponent<AudioSource>();
