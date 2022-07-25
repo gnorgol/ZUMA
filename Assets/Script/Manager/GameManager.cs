@@ -6,7 +6,7 @@ using SDD.Events;
 using System;
 using System.Linq;
 using TMPro;
-public enum GameState { gameMenu, gamePlay, gameNextLevel, gamePause, gameOver, gameVictory }
+public enum GameState { gameMenu, gamePlay, gameNextLevel, gamePause, gameOver, gameVictory, gameCredit }
 
 public class GameManager : Manager<GameManager>
 {
@@ -125,10 +125,7 @@ public class GameManager : Manager<GameManager>
         GameObject level = m_Level[currentIdLevel - 1];
         currentLevel = Instantiate(level, level.transform.position, Quaternion.identity);
     }
-    private void SelectLevelButtonHasBeenClicked(SelectLevelButtonHasBeenClickedEvent e)
-    {
-        InstantiateLevelExemple();
-    }
+
 
     #endregion
     #region Events' subscription
@@ -144,6 +141,7 @@ public class GameManager : Manager<GameManager>
         EventManager.Instance.AddListener<EscapeButtonClickedEvent>(EscapeButtonClicked);
         EventManager.Instance.AddListener<QuitButtonClickedEvent>(QuitButtonClicked);
         EventManager.Instance.AddListener<SelectLevelButtonHasBeenClickedEvent>(SelectLevelButtonHasBeenClicked);
+        EventManager.Instance.AddListener<CreditButtonClickedEvent>(CreditButtonClicked);
         //Score Item
         EventManager.Instance.AddListener<GainScoreEvent>(ScoreHasBeenGained);
 
@@ -166,6 +164,7 @@ public class GameManager : Manager<GameManager>
         EventManager.Instance.RemoveListener<EscapeButtonClickedEvent>(EscapeButtonClicked);
         EventManager.Instance.RemoveListener<QuitButtonClickedEvent>(QuitButtonClicked);
         EventManager.Instance.RemoveListener<SelectLevelButtonHasBeenClickedEvent>(SelectLevelButtonHasBeenClicked);
+        EventManager.Instance.RemoveListener<CreditButtonClickedEvent>(CreditButtonClicked);
         //Score Item
         EventManager.Instance.RemoveListener<GainScoreEvent>(ScoreHasBeenGained);
         //Level
@@ -239,6 +238,14 @@ public class GameManager : Manager<GameManager>
     {
         Application.Quit();
     }
+    private void SelectLevelButtonHasBeenClicked(SelectLevelButtonHasBeenClickedEvent e)
+    {
+        InstantiateLevelExemple();
+    }
+    private void CreditButtonClicked(CreditButtonClickedEvent e)
+    {
+        Credit();
+    }
     #endregion
 
     private void DestroyCurrentLevel()
@@ -305,7 +312,15 @@ public class GameManager : Manager<GameManager>
         m_GameState = GameStateBeforePause;
         EventManager.Instance.Raise(new GameResumeEvent());
     }
-
+    private void Credit()
+    {
+        if (IsPlaying) return;
+        m_Player.SetActive(false);
+        m_Ground.SetActive(false);
+        SetTimeScale(0);
+        m_GameState = GameState.gameCredit;
+        EventManager.Instance.Raise(new GameCreditEvent());
+    }
     private void FinishCurve(FinishCurveEvent e)
     {
 

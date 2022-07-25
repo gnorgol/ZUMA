@@ -15,6 +15,7 @@ public class MenuManager : Manager<MenuManager>
     [SerializeField] GameObject m_PanelGameVictory;
     [SerializeField] GameObject m_PanelGameOver;
     [SerializeField] GameObject m_PanelSelectLevel;
+    [SerializeField] GameObject m_PanelCredit;
     List<GameObject> m_AllPanels;
 
     #endregion
@@ -66,6 +67,7 @@ public class MenuManager : Manager<MenuManager>
         m_AllPanels.Add(m_PanelGameVictory);
         m_AllPanels.Add(m_PanelGameOver);
         m_AllPanels.Add(m_PanelSelectLevel);
+        m_AllPanels.Add(m_PanelCredit);
 
     }
 
@@ -117,7 +119,10 @@ public class MenuManager : Manager<MenuManager>
     {
         EventManager.Instance.Raise(new QuitButtonClickedEvent());
     }
-
+    public void CreditButtonHasBeenClicked()
+    {
+        EventManager.Instance.Raise(new CreditButtonClickedEvent());
+    }
     #endregion
 
     #region Callbacks to GameManager events
@@ -151,6 +156,9 @@ public class MenuManager : Manager<MenuManager>
     {
         OpenPanel(m_PanelGameVictory);
     }
-
+    protected override void GameCredit(GameCreditEvent e)
+    {
+        OpenPanel(m_PanelCredit);
+    }
     #endregion
 }
