@@ -25,7 +25,9 @@ public class GameOverEvent : SDD.Events.Event
 public class GameVictoryEvent : SDD.Events.Event
 {
 }
-
+public class GameCreditEvent : SDD.Events.Event
+{
+}
 public class GameStatisticsChangedEvent : SDD.Events.Event
 {
 	public float eBestScore { get; set; }
@@ -51,6 +53,9 @@ public class MainMenuButtonClickedEvent : SDD.Events.Event
 }
 
 public class QuitButtonClickedEvent : SDD.Events.Event
+{
+}
+public class CreditButtonClickedEvent : SDD.Events.Event
 {
 }
 public class SelectLevelButtonHasBeenClickedEvent : SDD.Events.Event
