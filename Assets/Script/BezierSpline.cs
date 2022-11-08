@@ -246,7 +246,12 @@ public class BezierSpline : MonoBehaviour
         if (ListeMovingObject.Count == 0)
         {
             DestroyAllMovingObject();
-            EventManager.Instance.Raise(new GameLevelChangedEvent() { eLevel = idLevel+1 });
+            Debug.Log("DestroyAllMovingObject");
+            if (GameManager.Instance.IsPlaying)
+            {
+                EventManager.Instance.Raise(new GameLevelChangedEvent() { eLevel = idLevel + 1 });
+            }
+            
         }
 
 

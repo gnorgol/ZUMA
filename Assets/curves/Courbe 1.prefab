@@ -162,7 +162,7 @@ MonoBehaviour:
   ListeMovingObject: []
   m_TranslationSpeed: 2
   m_Direction: 0
-  _Repeat: 1
+  _Repeat: 0
   ListBall:
   - {fileID: 2718030294302029624, guid: 67ffe7c8166c11d4286a8c04598cbe51, type: 3}
   - {fileID: 9191064020722898781, guid: c641134d150179147a7b9087c63c820c, type: 3}
