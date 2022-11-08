@@ -186,7 +186,11 @@ public class GameManager : Manager<GameManager>
         m_LevelDropdown.ClearOptions();
         for (int i = 0; i < m_Level.Count; i++)
         {
-            m_LevelDropdown.options.Add(new TMP_Dropdown.OptionData("Level " + (i + 1)));
+            if (m_Level[i].GetComponent<BezierSpline>() != null)
+            {
+                m_LevelDropdown.options.Add(new TMP_Dropdown.OptionData(m_Level[i].name));
+            }
+
         }
         yield break;
     }
