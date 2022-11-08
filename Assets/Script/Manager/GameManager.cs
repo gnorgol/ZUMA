@@ -6,7 +6,7 @@ using SDD.Events;
 using System;
 using System.Linq;
 using TMPro;
-public enum GameState { gameMenu, gamePlay, gameNextLevel, gamePause, gameOver, gameVictory, gameCredit }
+public enum GameState { gameMenu, gamePlay, gameNextLevel, gamePause, gameOver, gameVictory, gameCredit, gameEditLevel }
 
 public class GameManager : Manager<GameManager>
 {
@@ -142,6 +142,7 @@ public class GameManager : Manager<GameManager>
         EventManager.Instance.AddListener<QuitButtonClickedEvent>(QuitButtonClicked);
         EventManager.Instance.AddListener<SelectLevelButtonHasBeenClickedEvent>(SelectLevelButtonHasBeenClicked);
         EventManager.Instance.AddListener<CreditButtonClickedEvent>(CreditButtonClicked);
+        EventManager.Instance.AddListener<EditLevelButtonHasBeenClickedEvent>(EditLevelButtonHasBeenClicked);
         //Score Item
         EventManager.Instance.AddListener<GainScoreEvent>(ScoreHasBeenGained);
 
@@ -165,6 +166,7 @@ public class GameManager : Manager<GameManager>
         EventManager.Instance.RemoveListener<QuitButtonClickedEvent>(QuitButtonClicked);
         EventManager.Instance.RemoveListener<SelectLevelButtonHasBeenClickedEvent>(SelectLevelButtonHasBeenClicked);
         EventManager.Instance.RemoveListener<CreditButtonClickedEvent>(CreditButtonClicked);
+        EventManager.Instance.RemoveListener<EditLevelButtonHasBeenClickedEvent>(EditLevelButtonHasBeenClicked);
         //Score Item
         EventManager.Instance.RemoveListener<GainScoreEvent>(ScoreHasBeenGained);
         //Level
@@ -246,6 +248,11 @@ public class GameManager : Manager<GameManager>
     {
         Credit();
     }
+    private void EditLevelButtonHasBeenClicked(EditLevelButtonHasBeenClickedEvent e)
+    {
+        EditLevel();
+    }
+
     #endregion
 
     private void DestroyCurrentLevel()
@@ -320,6 +327,15 @@ public class GameManager : Manager<GameManager>
         SetTimeScale(0);
         m_GameState = GameState.gameCredit;
         EventManager.Instance.Raise(new GameCreditEvent());
+    }
+    private void EditLevel()
+    {
+        if (IsPlaying) return;
+        m_Player.SetActive(false);
+        m_Ground.SetActive(false);
+        SetTimeScale(0);
+        m_GameState = GameState.gameEditLevel;
+        EventManager.Instance.Raise(new GameEditorLevelEvent());
     }
     private void FinishCurve(FinishCurveEvent e)
     {

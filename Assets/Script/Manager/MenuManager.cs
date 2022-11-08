@@ -16,6 +16,7 @@ public class MenuManager : Manager<MenuManager>
     [SerializeField] GameObject m_PanelGameOver;
     [SerializeField] GameObject m_PanelSelectLevel;
     [SerializeField] GameObject m_PanelCredit;
+    [SerializeField] GameObject m_PanelEditorLevel;
     List<GameObject> m_AllPanels;
 
     #endregion
@@ -68,7 +69,7 @@ public class MenuManager : Manager<MenuManager>
         m_AllPanels.Add(m_PanelGameOver);
         m_AllPanels.Add(m_PanelSelectLevel);
         m_AllPanels.Add(m_PanelCredit);
-
+        m_AllPanels.Add(m_PanelEditorLevel);
     }
 
     void OpenPanel(GameObject panel)
@@ -123,6 +124,10 @@ public class MenuManager : Manager<MenuManager>
     {
         EventManager.Instance.Raise(new CreditButtonClickedEvent());
     }
+    public void EditLevelButtonHasBeenClicked()
+    {
+        EventManager.Instance.Raise(new EditLevelButtonHasBeenClickedEvent());
+    }
     #endregion
 
     #region Callbacks to GameManager events
@@ -159,6 +164,10 @@ public class MenuManager : Manager<MenuManager>
     protected override void GameCredit(GameCreditEvent e)
     {
         OpenPanel(m_PanelCredit);
+    }
+    protected override void GameEditorLevel(GameEditorLevelEvent e)
+    {
+        OpenPanel(m_PanelEditorLevel);
     }
     #endregion
 }
