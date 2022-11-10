@@ -337,7 +337,7 @@ public class GameManager : Manager<GameManager>
         if (IsPlaying) return;
         m_Player.SetActive(false);
         m_Ground.SetActive(false);
-        SetTimeScale(0);
+        SetTimeScale(1);
         m_GameState = GameState.gameEditLevel;
         EventManager.Instance.Raise(new GameEditorLevelEvent());
     }

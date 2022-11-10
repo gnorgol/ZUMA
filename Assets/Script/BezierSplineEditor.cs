@@ -15,14 +15,14 @@ public class BezierSplineEditor : MonoBehaviour
     [SerializeField] List<Transform> ListeMovingObject;
     [SerializeField] float m_TranslationSpeed;
     [SerializeField] bool m_Direction = true;
-    [SerializeField] bool _Repeat = true;
+    [SerializeField] bool _Repeat = false;
     float m_TranslatedDistance = 0;
     [SerializeField] List<GameObject> ListBall;
     [SerializeField] int nbBall;
     [SerializeField] int idLevel;
     LineRenderer lineRenderer;
     private bool IsSelected = false;
-    private bool isExemple = false;
+    private bool isExemple = true;
 
     #region Event listener
 
@@ -45,7 +45,7 @@ public class BezierSplineEditor : MonoBehaviour
         EventManager.Instance.AddListener<AddSphereEvent>(AddSphere);
         EventManager.Instance.AddListener<DeleteSphereEvent>(RemoveSphere);
         EventManager.Instance.AddListener<MoveSphereEvent>(MoveSphere);
-
+        EventManager.Instance.AddListener<PlayButtonEditorLevelClickedEvent>(PlayButtonEditorLevelClicked);
     }
 
     public void UnsubscribeEvents()
@@ -59,6 +59,7 @@ public class BezierSplineEditor : MonoBehaviour
         EventManager.Instance.RemoveListener<AddSphereEvent>(AddSphere);
         EventManager.Instance.RemoveListener<DeleteSphereEvent>(RemoveSphere);
         EventManager.Instance.RemoveListener<MoveSphereEvent>(MoveSphere);
+        EventManager.Instance.RemoveListener<PlayButtonEditorLevelClickedEvent>(PlayButtonEditorLevelClicked);
     }
     #endregion
     private void GameMenu(MainMenuButtonClickedEvent e)
@@ -147,21 +148,7 @@ public class BezierSplineEditor : MonoBehaviour
     private void Awake()
     {
         lineRenderer = this.GetComponent<LineRenderer>();
-/*        int PreviousR = 0;
-        int r;
-        for (int i = 0; i < nbBall; i++)
-        {
-            r = Random.Range(0, 4);
-            while (r == PreviousR)
-            {
-                r = Random.Range(0, 4);
-            }
-            PreviousR = r;
-            GameObject clone;
-            clone = Instantiate(ListBall[r], Vector3.zero, Quaternion.identity);
-            ListeMovingObject.Add(clone.transform);
-        }
-        GetAllColorsMovingObject();*/
+
     }
     private void GetAllColorsMovingObject()
     {
@@ -214,53 +201,55 @@ public class BezierSplineEditor : MonoBehaviour
 
     private void Update()
     {
-/*        Vector3 currentposition;
+        Vector3 currentposition;
 
 
         float previousRadius = 0;
         Vector3 previousPosition = Vector3.zero;
         int previousIndex = -1;
         int currentIndex = -1;
-
-        for (int i = 0; i < ListeMovingObject.Count; i++)
+        if (EditorLevelManager.Instance.FunctionEditorLevelActive == FunctionEditorLevel.Play && m_CtrlTransform.Count >= 4)
         {
-
-            Transform item = ListeMovingObject[i];
-            float currentRadious = item.GetComponent<SphereCollider>().radius * item.localScale.x;
-
-            float distance = _Repeat ? Mathf.Repeat(m_TranslatedDistance, m_MyCurve.Length) : m_TranslatedDistance;
-            if (i == 0 && m_MyCurve.GetPositionFromDistance(distance, out currentposition, out currentIndex))
+            for (int i = 0; i < ListeMovingObject.Count; i++)
             {
 
-                if (currentIndex == m_MyCurve.NPoints - 2 && !isExemple)
+                Transform item = ListeMovingObject[i];
+                float currentRadious = item.GetComponent<SphereCollider>().radius * item.localScale.x;
+
+                float distance = _Repeat ? Mathf.Repeat(m_TranslatedDistance, m_MyCurve.Length) : m_TranslatedDistance;
+                if (i == 0 && m_MyCurve.GetPositionFromDistance(distance, out currentposition, out currentIndex))
                 {
-                    DestroyAllMovingObject();
-                    EventManager.Instance.Raise(new FinishCurveEvent());
 
+                    if (currentIndex == m_MyCurve.NPoints - 2 && !isExemple)
+                    {
+                        DestroyAllMovingObject();
+                        EventManager.Instance.Raise(new FinishCurveEvent());
+
+                    }
+                    item.position = currentposition;
                 }
-                item.position = currentposition;
-            }
-            else if (m_MyCurve.GetSphereSplineIntersection(previousPosition, previousRadius + currentRadious, previousIndex, m_Direction ? 1 : -1, out currentposition, out currentIndex))
-            {
-                item.position = currentposition;
-            }
-            previousRadius = currentRadious;
-            previousPosition = currentposition;
-            previousIndex = currentIndex;
+                else if (m_MyCurve.GetSphereSplineIntersection(previousPosition, previousRadius + currentRadious, previousIndex, m_Direction ? 1 : -1, out currentposition, out currentIndex))
+                {
+                    item.position = currentposition;
+                }
+                previousRadius = currentRadious;
+                previousPosition = currentposition;
+                previousIndex = currentIndex;
 
+            }
+            m_TranslatedDistance += m_TranslationSpeed * Time.deltaTime;
         }
-        m_TranslatedDistance += m_TranslationSpeed * Time.deltaTime;
-        if (ListeMovingObject.Count == 0)
+        else
         {
-            DestroyAllMovingObject();
-            Debug.Log("DestroyAllMovingObject");
-            if (GameManager.Instance.IsPlaying)
+            if (ListeMovingObject.Count != 0)
             {
-                EventManager.Instance.Raise(new GameLevelChangedEvent() { eLevel = idLevel + 1 });
+                DeleteBallCurve();
             }
+            m_TranslatedDistance = 0;
 
         }
-*/
+
+
 
     }
     private void InstantiateLevelExemple(InstantiateLevelExempleEvent e)
@@ -342,5 +331,41 @@ public class BezierSplineEditor : MonoBehaviour
             //reset lineRenderer
             lineRenderer.positionCount = 0;
         }
+    }
+    private void CreateBall()
+    {
+        Debug.Log("CreateBall");
+        int PreviousR = 0;
+        int r;
+        for (int i = 0; i < nbBall; i++)
+        {
+            r = Random.Range(0, 4);
+            while (r == PreviousR)
+            {
+                r = Random.Range(0, 4);
+            }
+            PreviousR = r;
+            GameObject clone;
+            clone = Instantiate(ListBall[r], Vector3.zero, Quaternion.identity);
+            ListeMovingObject.Add(clone.transform);
+        }
+        GetAllColorsMovingObject();
+    }
+    private void DeleteBallCurve()
+    {
+        foreach (var item in ListeMovingObject)
+        {
+            Destroy(item.gameObject);
+        }
+        ListeMovingObject.Clear();
+
+    }
+    private void PlayButtonEditorLevelClicked(PlayButtonEditorLevelClickedEvent e)
+    {
+        if (EditorLevelManager.Instance.FunctionEditorLevelActive == FunctionEditorLevel.Play)
+        {
+            CreateBall();
+        }
+
     }
 }

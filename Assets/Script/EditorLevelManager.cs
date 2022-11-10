@@ -100,10 +100,18 @@ public class EditorLevelManager : Manager<EditorLevelManager>
 
                 break;
             case FunctionEditorLevel.Save:
+                EventManager.Instance.Raise(new SaveButtonEditorLevelClickedEvent());
                 break;
             case FunctionEditorLevel.Play:
+                EventManager.Instance.Raise(new PlayButtonEditorLevelClickedEvent());
                 break;
             case FunctionEditorLevel.None:
+                break;
+            case FunctionEditorLevel.Delete:
+
+                break;
+            case FunctionEditorLevel.Move:
+
                 break;
             default:
                 break;
@@ -232,7 +240,7 @@ public class EditorLevelManager : Manager<EditorLevelManager>
 
     protected override IEnumerator InitCoroutine()
     {
-        throw new System.NotImplementedException();
+        yield break;
     }
     #endregion
 

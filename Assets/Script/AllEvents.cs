@@ -135,4 +135,13 @@ public class DeleteSphereEvent : SDD.Events.Event
 public class MoveSphereEvent : SDD.Events.Event
 {
 }
+public class SaveLevelEvent : SDD.Events.Event
+{
+}
+public class PlayButtonEditorLevelClickedEvent : SDD.Events.Event
+{
+}
+public class SaveButtonEditorLevelClickedEvent : SDD.Events.Event
+{
+}
 #endregion
