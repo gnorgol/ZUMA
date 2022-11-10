@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using SDD.Events;
 using UnityEngine.UI;
+using System.Linq;
 public enum FunctionEditorLevel
 {
     Add,
@@ -12,7 +13,7 @@ public enum FunctionEditorLevel
     Play,
     None
 }
-public class EditorLevelManager : MonoBehaviour
+public class EditorLevelManager : Manager<EditorLevelManager>
 {
     [SerializeField] private GameObject _EditorLevel;
     GameObject _EditorLevelInstance;
@@ -24,6 +25,10 @@ public class EditorLevelManager : MonoBehaviour
     [SerializeField] private Button m_SaveButton;
     [SerializeField] private Button m_PlayButton;
     private Button LastButtonClick;
+    private bool _IsButtonClicked = false;
+    private GameObject _SphereInstantiate;
+
+    public FunctionEditorLevel FunctionEditorLevelActive { get => _FunctionEditorLevelActive; set => _FunctionEditorLevelActive = value; }
 
     #region Event listener
     private void OnEnable()
@@ -52,6 +57,8 @@ public class EditorLevelManager : MonoBehaviour
         EventManager.Instance.RemoveListener<MainMenuButtonClickedEvent>(MainMenuButtonClicked);
     }
     #endregion
+
+    #region Event callback
     private void GameEditorLevel(GameEditorLevelEvent e)
     {
         Debug.Log("Level editor has been instantiated");
@@ -66,21 +73,18 @@ public class EditorLevelManager : MonoBehaviour
             Destroy(_EditorLevelInstance);
         }
     }
-    public void ButtonClicked(FunctionEditorLevel functionEditorLevel,Button button)
+    public void ButtonClicked(FunctionEditorLevel functionEditorLevel, Button button)
     {
-        Debug.Log("FunctionEditorLevelActive = " + _FunctionEditorLevelActive);
-        Debug.Log("functionEditorLevel = " + functionEditorLevel);
 
         if (_FunctionEditorLevelActive == functionEditorLevel)
         {
             _FunctionEditorLevelActive = FunctionEditorLevel.None;
             button.image.color = Color.white;
             LastButtonClick = null;
-            Debug.Log("LastButtonClick2 = " + LastButtonClick);
+            _IsButtonClicked = false;
         }
         else
         {
-            Debug.Log("LastButtonClick = " + LastButtonClick);
             _FunctionEditorLevelActive = functionEditorLevel;
             button.image.color = Color.red;
             if (LastButtonClick != null)
@@ -88,9 +92,149 @@ public class EditorLevelManager : MonoBehaviour
                 LastButtonClick.image.color = Color.white;
             }
             LastButtonClick = button;
+            _IsButtonClicked = true;
         }
-        
+        switch (_FunctionEditorLevelActive)
+        {
+            case FunctionEditorLevel.Add:
+
+                break;
+            case FunctionEditorLevel.Save:
+                break;
+            case FunctionEditorLevel.Play:
+                break;
+            case FunctionEditorLevel.None:
+                break;
+            default:
+                break;
+        }
+
     }
-    
+    #endregion
+
+    #region System
+    private void Update()
+    {
+        RaycastHit[] hits;
+        hits = Physics.RaycastAll(Camera.main.ScreenPointToRay(Input.mousePosition), 1000);
+        if (Input.GetMouseButtonDown(0) && _IsButtonClicked)
+        {
+            Debug.Log("Mouse button down");
+            foreach (var item in hits)
+            {
+                Debug.Log(item.collider.gameObject.name);
+            }
+            if (hits.Any(x => x.collider.gameObject.layer == 6))
+            {
+                GameObject EditSphere = null;
+                //hit with the tag EditSphere
+                if (hits.Any(x => x.collider.gameObject.tag == "EditSphere"))
+                {
+                    EditSphere = hits.First(x => x.collider.gameObject.tag == "EditSphere").collider.gameObject;
+                }
+
+                switch (_FunctionEditorLevelActive)
+                {
+                    case FunctionEditorLevel.Add:
+                        Debug.Log("Add");
+                        if (EditSphere == null)
+                        {
+                            CreateSphere();
+                            EventManager.Instance.Raise(new AddSphereEvent() { Sphere = _SphereInstantiate });
+                        }
+                        break;
+                    case FunctionEditorLevel.Move:
+                        Debug.Log("Move");
+                        if (EditSphere != null)
+                        {
+                           // MoveSphere(EditSphere);
+                        }
+                        break;
+                    case FunctionEditorLevel.Delete:
+                        Debug.Log("Delete");
+                        if (EditSphere)
+                        {
+                            Debug.Log("Destroy");
+                            EventManager.Instance.Raise(new DeleteSphereEvent() { Sphere = EditSphere });
+                            Destroy(EditSphere);
+                        }
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+/*        if (Input.GetMouseButtonUp(0) && _IsButtonClicked)
+        {
+
+            if (_FunctionEditorLevelActive == FunctionEditorLevel.Move)
+            {
+                if (_SphereInstantiate != null)
+                {
+                    _SphereInstantiate.GetComponent<Rigidbody>().isKinematic = false;
+                    _SphereInstantiate = null;
+                }
+            }
+
+        }*/
+
+
+    }
+    #endregion
+
+    #region Methods
+    private void CreateSphere()
+    {
+        //Instantiate a sphere
+        _SphereInstantiate = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+        _SphereInstantiate.transform.position = new Vector3(0, 0, 0);
+        _SphereInstantiate.transform.localScale = new Vector3(1, 1, 1);
+        //Place the sphere on the position of the mouse
+        RaycastHit hit;
+        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        if (Physics.Raycast(ray, out hit, 1000))
+        {
+            _SphereInstantiate.transform.position = hit.point;
+        }
+        //remove the collider of the sphere
+        Destroy(_SphereInstantiate.GetComponent<SphereCollider>());
+        //add tag EditSphere
+        _SphereInstantiate.tag = "EditSphere";
+        //add script DragSphere
+        _SphereInstantiate.AddComponent<DragSphere>();
+        //add mesh collider
+        _SphereInstantiate.AddComponent<MeshCollider>();
+        //Set trigger to true
+        _SphereInstantiate.GetComponent<Collider>().isTrigger = true;
+        //add rigidbody
+        _SphereInstantiate.AddComponent<Rigidbody>();
+        //set rigidbody to kinematic
+        _SphereInstantiate.GetComponent<Rigidbody>().isKinematic = true;
+        //set rigidbody to use gravity
+        _SphereInstantiate.GetComponent<Rigidbody>().useGravity = false;
+        //set rigidbody Interpolate to true
+        _SphereInstantiate.GetComponent<Rigidbody>().interpolation = RigidbodyInterpolation.Interpolate;
+        //Set parent to the _EditorLevelInstance
+        _SphereInstantiate.transform.parent = _EditorLevelInstance.transform;
+
+
+    }
+    private void MoveSphere(GameObject EditSphere)
+    {
+        //Place the sphere on the position of the mouse
+        RaycastHit hit;
+        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        if (Physics.Raycast(ray, out hit, 1000))
+        {
+            EditSphere.transform.position = hit.point;
+        }
+    }
+
+    protected override IEnumerator InitCoroutine()
+    {
+        throw new System.NotImplementedException();
+    }
+    #endregion
+
 }
 

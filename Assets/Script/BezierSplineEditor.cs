@@ -42,6 +42,9 @@ public class BezierSplineEditor : MonoBehaviour
         EventManager.Instance.AddListener<MainMenuButtonClickedEvent>(GameMenu);
         EventManager.Instance.AddListener<InstantiateLevelExempleEvent>(InstantiateLevelExemple);
         EventManager.Instance.AddListener<DestroyLevelExempleEvent>(DestroyLevelExemple);
+        EventManager.Instance.AddListener<AddSphereEvent>(AddSphere);
+        EventManager.Instance.AddListener<DeleteSphereEvent>(RemoveSphere);
+        EventManager.Instance.AddListener<MoveSphereEvent>(MoveSphere);
 
     }
 
@@ -53,6 +56,9 @@ public class BezierSplineEditor : MonoBehaviour
         EventManager.Instance.RemoveListener<MainMenuButtonClickedEvent>(GameMenu);
         EventManager.Instance.RemoveListener<InstantiateLevelExempleEvent>(InstantiateLevelExemple);
         EventManager.Instance.RemoveListener<DestroyLevelExempleEvent>(DestroyLevelExemple);
+        EventManager.Instance.RemoveListener<AddSphereEvent>(AddSphere);
+        EventManager.Instance.RemoveListener<DeleteSphereEvent>(RemoveSphere);
+        EventManager.Instance.RemoveListener<MoveSphereEvent>(MoveSphere);
     }
     #endregion
     private void GameMenu(MainMenuButtonClickedEvent e)
@@ -141,7 +147,7 @@ public class BezierSplineEditor : MonoBehaviour
     private void Awake()
     {
         lineRenderer = this.GetComponent<LineRenderer>();
-        int PreviousR = 0;
+/*        int PreviousR = 0;
         int r;
         for (int i = 0; i < nbBall; i++)
         {
@@ -155,7 +161,7 @@ public class BezierSplineEditor : MonoBehaviour
             clone = Instantiate(ListBall[r], Vector3.zero, Quaternion.identity);
             ListeMovingObject.Add(clone.transform);
         }
-        GetAllColorsMovingObject();
+        GetAllColorsMovingObject();*/
     }
     private void GetAllColorsMovingObject()
     {
@@ -168,7 +174,7 @@ public class BezierSplineEditor : MonoBehaviour
     }
     private void Start()
     {
-        List<Vector3> positions = m_CtrlTransform.Select(item => item.position).ToList();
+        //List<Vector3> positions = m_CtrlTransform.Select(item => item.position).ToList();
         /*
                 Vector3 p1 = positions[0];
                 Vector3 p2 = positions[1];
@@ -197,18 +203,18 @@ public class BezierSplineEditor : MonoBehaviour
                     }
                 }*/
 
-        m_MyCurve = new CurveLinearInterpo(m_CtrlTransform, m_PtsDensity, m_IsClosed);
+/*        m_MyCurve = new CurveLinearInterpo(m_CtrlTransform, m_PtsDensity, m_IsClosed);
         lineRenderer.positionCount = m_MyCurve.ListPts.Count;
         lineRenderer.SetPositions(m_MyCurve.ListPts.ToArray());
         if (isExemple)
         {
             _Repeat = true;
-        }
+        }*/
     }
 
     private void Update()
     {
-        Vector3 currentposition;
+/*        Vector3 currentposition;
 
 
         float previousRadius = 0;
@@ -254,7 +260,7 @@ public class BezierSplineEditor : MonoBehaviour
             }
 
         }
-
+*/
 
     }
     private void InstantiateLevelExemple(InstantiateLevelExempleEvent e)
@@ -273,5 +279,68 @@ public class BezierSplineEditor : MonoBehaviour
         }
         ListeMovingObject.Clear();
         GetAllColorsMovingObject();
+    }
+    private void AddSphere(AddSphereEvent e)
+    {
+        m_CtrlTransform.Add(e.Sphere.transform);
+        UpdateCurve();
+    }
+    private void RemoveSphere(DeleteSphereEvent e)
+    {
+        m_CtrlTransform.Remove(e.Sphere.transform);
+        UpdateCurve();
+    }
+    private void MoveSphere(MoveSphereEvent e)
+    {
+        UpdateCurve();
+    }
+    private void UpdateCurve()
+    {
+        if (m_CtrlTransform.Count >= 4)
+        {
+            m_Pts = new List<Vector3>();
+            List<Vector3> positions = m_CtrlTransform.Select(item => item.position).ToList();
+
+            Vector3 p1 = positions[0];
+            Vector3 p2 = positions[1];
+            Vector3 p3 = positions[2];
+            Vector3 p4 = positions[3];
+
+            for (int i = 0; i < m_NbPtsOnSpline; i++)
+            {
+                float t = (float)i / (m_NbPtsOnSpline - 1);
+                m_Pts.Add(ComputeBezierPos(p1, p2, p3, p4, t));
+            }
+            for (int i = 1; i < positions.Count - 2; i++)
+            {
+                Vector3 P0 = positions[i - 1];
+                Vector3 P1 = positions[i];
+                Vector3 P2 = positions[i + 1];
+                Vector3 P3 = positions[i + 2];
+                float ditance = Vector3.Distance(P1, P2);
+                int nPts = (int)Mathf.Max(3, ditance * m_PtsDensity);
+                for (int j = 0; j < nPts; j++)
+                {
+                    int nPtsDenominator = (i == positions.Count - 3) && !m_IsClosed ? nPts - 1 : nPts;
+                    float k = (float)j / nPtsDenominator;
+                    Vector3 pt = ComputeBezierPos(P0, P1, P2, P3, k);
+                    m_Pts.Add(pt);
+                }
+            }
+
+            m_MyCurve = new CurveLinearInterpo(m_CtrlTransform, m_PtsDensity, m_IsClosed);
+            lineRenderer.positionCount = m_MyCurve.ListPts.Count;
+            lineRenderer.SetPositions(m_MyCurve.ListPts.ToArray());
+            if (isExemple)
+            {
+                _Repeat = true;
+            }
+        }
+        else
+        {
+            m_Pts = new List<Vector3>();
+            //reset lineRenderer
+            lineRenderer.positionCount = 0;
+        }
     }
 }

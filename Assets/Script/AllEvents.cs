@@ -123,4 +123,16 @@ public class PlayerShootEvent : SDD.Events.Event
 
 #endregion
 
-
+#region Editor Events
+public class AddSphereEvent : SDD.Events.Event
+{
+    public GameObject Sphere;
+}
+public class DeleteSphereEvent : SDD.Events.Event
+{
+    public GameObject Sphere;
+}
+public class MoveSphereEvent : SDD.Events.Event
+{
+}
+#endregion
