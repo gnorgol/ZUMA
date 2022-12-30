@@ -627,12 +627,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dd5f3ac3d0a9909419d64760221d009b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  m_DoNotDestroyGameObjectOnLoad: 0
   _EditorLevel: {fileID: 1961966431678634093, guid: 8a1d51a9ab3dd124dba6c12e0cd6acda, type: 3}
   m_AddButton: {fileID: 216072340}
   m_MoveButton: {fileID: 104459618}
   m_DeleteButton: {fileID: 1153086999}
   m_SaveButton: {fileID: 1908538875}
   m_PlayButton: {fileID: 724882123}
+  _Player: {fileID: 919132148226072434}
 --- !u!4 &81939173
 Transform:
   m_ObjectHideFlags: 0
@@ -6831,11 +6833,22 @@ MonoBehaviour:
   m_DoNotDestroyGameObjectOnLoad: 0
   m_Player: {fileID: 919132148226072434}
   m_Ground: {fileID: 962415390}
-  m_Level:
+  m_ListLevel:
   - {fileID: 1610549288723353318, guid: 2c54023f6a5b65743bd09f549968547e, type: 3}
   - {fileID: 1383379183718453790, guid: ba355fb3e02bf8c47a2ec5c0fae3fd06, type: 3}
   - {fileID: 1418963439692712200, guid: 92838d6b5be52494caff659e0f352440, type: 3}
+  _ListSaveLevel: []
+  PathFileSaveLevel: Assets/Resources/SaveCurves/
+  _materialLineRenderer: {fileID: 2100000, guid: 2df90cce9852e4144addb1d8b4318108, type: 2}
+  listBall:
+  - {fileID: 2718030294302029624, guid: 67ffe7c8166c11d4286a8c04598cbe51, type: 3}
+  - {fileID: 9191064020722898781, guid: c641134d150179147a7b9087c63c820c, type: 3}
+  - {fileID: 5178112621158131601, guid: fae46c51ea1f6ae4aba2e9a864f97fa0, type: 3}
+  - {fileID: 5375492356777330187, guid: 4f137e5e6dd7a3a44aa80399ef6d0703, type: 3}
   m_LevelDropdown: {fileID: 1784912512}
+  m_SelectLevel: 1
+  currentIdLevel: 0
+  isPlayingSelectedLevel: 0
 --- !u!1 &1317305411
 GameObject:
   m_ObjectHideFlags: 0
@@ -7780,51 +7793,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1609600479}
   m_CullTransparentMesh: 1
---- !u!1 &1625070955
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1625070957}
-  - component: {fileID: 1625070956}
-  m_Layer: 0
-  m_Name: GetThumbnail
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &1625070956
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1625070955}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7e0db4ac801436246be1f67cedabb70a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  obj: {fileID: 2045158998011704249, guid: 95af080a16ea24f479a8e24d1430d92b, type: 3}
-  thumbnail: {fileID: 0}
---- !u!4 &1625070957
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1625070955}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.7217145, y: -1.6784308, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_RootOrder: 8
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1636286013
 GameObject:
   m_ObjectHideFlags: 0

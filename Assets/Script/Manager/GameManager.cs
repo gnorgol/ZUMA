@@ -6,6 +6,10 @@ using SDD.Events;
 using System;
 using System.Linq;
 using TMPro;
+using UnityEditor;
+using System.IO;
+using System.Runtime.Serialization.Formatters.Binary;
+
 public enum GameState { gameMenu, gamePlay, gameNextLevel, gamePause, gameOver, gameVictory, gameCredit, gameEditLevel }
 
 public class GameManager : Manager<GameManager>
@@ -38,6 +42,7 @@ public class GameManager : Manager<GameManager>
         set { PlayerPrefs.SetFloat("BEST_SCORE", value); }
     }
 
+
     void IncrementScore(float increment)
     {
         SetScore(m_Score + increment);
@@ -64,13 +69,24 @@ public class GameManager : Manager<GameManager>
     #endregion
     #region Level
     [SerializeField]
-    private List<GameObject> m_Level;
+    private List<GameObject> m_ListLevel;
+
+    [SerializeField]
+    private List<string> _ListSaveLevel;
+    [SerializeField]
+    private string PathFileSaveLevel = "Assets/Resources/SaveCurves/";
+    [SerializeField]
+    private Material _materialLineRenderer;
+    [SerializeField] private List<GameObject> listBall;
+    public List<GameObject> ListLevel { get => m_ListLevel; set => m_ListLevel = value; }
+    public List<string> ListSaveLevel { get => _ListSaveLevel; set => _ListSaveLevel = value; }
+
     [SerializeField] TMP_Dropdown m_LevelDropdown;
-    private int m_SelectLevel = 1;
+    [SerializeField] private int m_SelectLevel = 1;
     private GameObject currentLevel;
-    int currentIdLevel = 0;
+    [SerializeField] int currentIdLevel = 0;
     private GameObject LevelExemple;
-    private bool isPlayingSelectedLevel = false;
+    [SerializeField] private bool isPlayingSelectedLevel = false;
     private void GameLevelChanged(GameLevelChangedEvent e)
     {
         if (currentIdLevel != 0)
@@ -80,7 +96,7 @@ public class GameManager : Manager<GameManager>
         if (!isPlayingSelectedLevel)
         {
             currentIdLevel = e.eLevel;
-            if (currentIdLevel > m_Level.Count)
+            if (currentIdLevel > m_ListLevel.Count + _ListSaveLevel.Count)
             {
                 Victory();
             }
@@ -106,11 +122,21 @@ public class GameManager : Manager<GameManager>
     private void InstantiateLevelExemple()
     {
         DestroyLevelExemple();
-        LevelExemple = m_Level[m_SelectLevel - 1];
+        if (m_SelectLevel <= m_ListLevel.Count)
+        {
+            LevelExemple = m_ListLevel[m_SelectLevel - 1];
+        }
+        else
+        {
+            LevelExemple = LoadLevel(_ListSaveLevel[m_SelectLevel - m_ListLevel.Count - 1]);            
+        }
         LevelExemple = Instantiate(LevelExemple, LevelExemple.transform.position, Quaternion.identity);
         LevelExemple.name = "LevelExemple_" + m_SelectLevel;
+        LevelExemple.GetComponent<BezierSpline>().IsExemple = true;
+        LevelExemple.GetComponent<BezierSpline>().Repeat = true;
+        LevelExemple.GetComponent<BezierSpline>().enabled = true;
+        LevelExemple.GetComponent<BezierSpline>().SetInstantiate(true);
         SetTimeScale(1);
-        EventManager.Instance.Raise(new InstantiateLevelExempleEvent());
     }
     private void DestroyLevelExemple()
     {
@@ -122,8 +148,22 @@ public class GameManager : Manager<GameManager>
     }
     private void InstantiateLevel()
     {
-        GameObject level = m_Level[currentIdLevel - 1];
+        GameObject level = null;
+        if (currentIdLevel <= m_ListLevel.Count)
+        {
+            level = m_ListLevel[currentIdLevel - 1];
+        }
+        else
+        {
+            Debug.Log("Load Level");
+            level = LoadLevel(_ListSaveLevel[currentIdLevel - m_ListLevel.Count - 1]);
+            
+        }
+
         currentLevel = Instantiate(level, level.transform.position, Quaternion.identity);
+        currentLevel.name = "Level_" + currentIdLevel;
+        currentLevel.GetComponent<BezierSpline>().enabled = true;
+        currentLevel.GetComponent<BezierSpline>().SetInstantiate(true);
     }
 
 
@@ -149,6 +189,7 @@ public class GameManager : Manager<GameManager>
         //Level
         EventManager.Instance.AddListener<GameLevelChangedEvent>(GameLevelChanged);
         EventManager.Instance.AddListener<FinishCurveEvent>(FinishCurve);
+        EventManager.Instance.AddListener<SaveCurveEvent>(SaveCurve);
     }
 
 
@@ -171,9 +212,9 @@ public class GameManager : Manager<GameManager>
         EventManager.Instance.RemoveListener<GainScoreEvent>(ScoreHasBeenGained);
         //Level
         EventManager.Instance.RemoveListener<GameLevelChangedEvent>(GameLevelChanged);
-
-
         EventManager.Instance.RemoveListener<FinishCurveEvent>(FinishCurve);
+        EventManager.Instance.RemoveListener<SaveCurveEvent>(SaveCurve);
+
     }
 
 
@@ -183,15 +224,9 @@ public class GameManager : Manager<GameManager>
     {
         Menu();
         InitNewGame(); // essentiellement pour que les statistiques du jeu soient mise à jour en HUD
-        m_LevelDropdown.ClearOptions();
-        for (int i = 0; i < m_Level.Count; i++)
-        {
-            if (m_Level[i].GetComponent<BezierSpline>() != null)
-            {
-                m_LevelDropdown.options.Add(new TMP_Dropdown.OptionData(m_Level[i].name));
-            }
+        GetAllSaveLevel();
+        UpdateListDropDown();
 
-        }
         yield break;
     }
     #endregion
@@ -246,6 +281,7 @@ public class GameManager : Manager<GameManager>
     }
     private void SelectLevelButtonHasBeenClicked(SelectLevelButtonHasBeenClickedEvent e)
     {
+        UpdateListDropDown();
         InstantiateLevelExemple();
     }
     private void CreditButtonClicked(CreditButtonClickedEvent e)
@@ -266,6 +302,10 @@ public class GameManager : Manager<GameManager>
             Destroy(currentLevel);
         }
     }
+    private void SaveCurve(SaveCurveEvent e)
+    {
+        GetAllSaveLevel();
+    }
 
 
     #region GameState methods
@@ -285,10 +325,12 @@ public class GameManager : Manager<GameManager>
 
     private void Play(bool IsSelected)
     {
+        
         m_Ground.SetActive(true);
         InitNewGame();
         m_Player.SetActive(true);
         SetTimeScale(1);
+        m_GameState = GameState.gamePlay;
         if (!IsSelected)
         {
             EventManager.Instance.Raise(new GameLevelChangedEvent() { eLevel = 1 });
@@ -299,7 +341,7 @@ public class GameManager : Manager<GameManager>
             EventManager.Instance.Raise(new GameLevelChangedEvent() { eLevel = m_SelectLevel });
             isPlayingSelectedLevel = true;
         }
-        m_GameState = GameState.gamePlay;
+        
         EventManager.Instance.Raise(new GamePlayEvent());
     }
 
@@ -343,8 +385,11 @@ public class GameManager : Manager<GameManager>
     }
     private void FinishCurve(FinishCurveEvent e)
     {
-
-        Over();
+        if (IsPlaying)
+        {
+            Over();
+        }
+        
     }
     private void Victory()
     {
@@ -363,6 +408,73 @@ public class GameManager : Manager<GameManager>
         EventManager.Instance.Raise(new GameOverEvent());
     }
 
+    private void UpdateListDropDown()
+    {
+
+        m_LevelDropdown.ClearOptions();
+        for (int i = 0; i < m_ListLevel.Count; i++)
+        {
+            if (m_ListLevel[i].GetComponent<BezierSpline>() != null)
+            {
+                m_LevelDropdown.options.Add(new TMP_Dropdown.OptionData(m_ListLevel[i].name));
+            }
+
+        }
+        for (int i = 0; i < _ListSaveLevel.Count; i++)
+        {
+            m_LevelDropdown.options.Add(new TMP_Dropdown.OptionData(_ListSaveLevel[i]));
+        }
+    }
+    private void GetAllSaveLevel()
+    {
+        string[] files = Directory.GetFiles(PathFileSaveLevel,"*.dat");
+        _ListSaveLevel = files.Select(x => Path.GetFileNameWithoutExtension(x)).ToList();
+    }
+    private GameObject LoadLevel(string fileName)
+    {
+        BinaryFormatter formatter = new BinaryFormatter();
+        FileStream stream = new FileStream(PathFileSaveLevel + fileName + ".dat", FileMode.Open);
+        GameData gameData = formatter.Deserialize(stream) as GameData;
+        stream.Close();
+
+        GameObject levelSaved = new GameObject();
+        levelSaved.transform.position = new Vector3(0, 1, 0);
+
+        //add lineRenderer
+        LineRenderer lineRenderer = levelSaved.AddComponent<LineRenderer>();
+        lineRenderer.material = _materialLineRenderer;
+
+        List<Transform> m_CtrlTransform = new List<Transform>();
+        foreach (var item in gameData.transformList)
+        {
+            //Create spehere with the name and the possition
+            GameObject sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            //disable mesh sphere
+            sphere.GetComponent<MeshRenderer>().enabled = false;
+            sphere.name = item.name;
+            //set sphere in child of the levelSaved
+            sphere.transform.parent = levelSaved.transform;
+            sphere.transform.position = new Vector3(item.posX, item.posY, item.posZ);
+            //add the sphere to the list
+            m_CtrlTransform.Add(sphere.transform);
+            
+        }
+        BezierSpline bezierSplineCompenent = levelSaved.AddComponent<BezierSpline>();
+        bezierSplineCompenent.enabled = false;
+        bezierSplineCompenent.CtrlTransform = m_CtrlTransform;
+        bezierSplineCompenent.NbPtsOnSpline = gameData.m_NbPtsOnSpline;
+        bezierSplineCompenent.IsClosed = gameData.m_IsClosed;
+        bezierSplineCompenent.PtsDensity = gameData.m_PtsDensity;
+        bezierSplineCompenent.TranslationSpeed = gameData.m_TranslationSpeed;
+        bezierSplineCompenent.Direction = gameData.m_Direction;
+        bezierSplineCompenent.Repeat = false;
+        bezierSplineCompenent.NbBall = gameData._nbBall;
+        bezierSplineCompenent.IdLevel = gameData._idLevel;
+        bezierSplineCompenent.ListBall = listBall;
+        //active BezierSpline
+        Destroy(levelSaved);
+        return levelSaved;
+    }
     #endregion
 
 

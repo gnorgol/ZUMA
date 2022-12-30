@@ -657,13 +657,15 @@ MonoBehaviour:
   m_TranslationSpeed: 2
   m_Direction: 0
   _Repeat: 0
-  ListBall:
+  _ListBall:
   - {fileID: 2718030294302029624, guid: 67ffe7c8166c11d4286a8c04598cbe51, type: 3}
   - {fileID: 9191064020722898781, guid: c641134d150179147a7b9087c63c820c, type: 3}
   - {fileID: 5178112621158131601, guid: fae46c51ea1f6ae4aba2e9a864f97fa0, type: 3}
   - {fileID: 5375492356777330187, guid: 4f137e5e6dd7a3a44aa80399ef6d0703, type: 3}
-  nbBall: 10
-  idLevel: 2
+  _nbBall: 7
+  _idLevel: 2
+  _isExemple: 0
+  _isInstantiate: 0
 --- !u!120 &2714761230263567211
 LineRenderer:
   m_ObjectHideFlags: 0

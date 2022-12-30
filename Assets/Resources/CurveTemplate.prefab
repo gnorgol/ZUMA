@@ -9,8 +9,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8754083130832222126}
-  - component: {fileID: 2796670791758265003}
   - component: {fileID: 2928272760656396594}
+  - component: {fileID: -5856657097318007576}
   m_Layer: 0
   m_Name: CurveTemplate
   m_TagString: Untagged
@@ -32,33 +32,6 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &2796670791758265003
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1961966431678634093}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 877812c143dff60408da5fc241a773ee, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_CtrlTransform: []
-  m_NbPtsOnSpline: 1
-  m_IsClosed: 0
-  m_PtsDensity: 1
-  ListeMovingObject: []
-  m_TranslationSpeed: 2
-  m_Direction: 0
-  _Repeat: 0
-  ListBall:
-  - {fileID: 2718030294302029624, guid: 67ffe7c8166c11d4286a8c04598cbe51, type: 3}
-  - {fileID: 9191064020722898781, guid: c641134d150179147a7b9087c63c820c, type: 3}
-  - {fileID: 5178112621158131601, guid: fae46c51ea1f6ae4aba2e9a864f97fa0, type: 3}
-  - {fileID: 5375492356777330187, guid: 4f137e5e6dd7a3a44aa80399ef6d0703, type: 3}
-  nbBall: 5
-  idLevel: 4
 --- !u!120 &2928272760656396594
 LineRenderer:
   m_ObjectHideFlags: 0
@@ -155,3 +128,32 @@ LineRenderer:
     generateLightingData: 0
   m_UseWorldSpace: 1
   m_Loop: 0
+--- !u!114 &-5856657097318007576
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1961966431678634093}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 89b65a46c0b1850408212a83c3988c32, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_CtrlTransform: []
+  m_NbPtsOnSpline: 1
+  m_IsClosed: 0
+  m_PtsDensity: 1
+  ListeMovingObject: []
+  m_TranslationSpeed: 2
+  m_Direction: 0
+  _Repeat: 1
+  _ListBall:
+  - {fileID: 2718030294302029624, guid: 67ffe7c8166c11d4286a8c04598cbe51, type: 3}
+  - {fileID: 9191064020722898781, guid: c641134d150179147a7b9087c63c820c, type: 3}
+  - {fileID: 5178112621158131601, guid: fae46c51ea1f6ae4aba2e9a864f97fa0, type: 3}
+  - {fileID: 5375492356777330187, guid: 4f137e5e6dd7a3a44aa80399ef6d0703, type: 3}
+  _nbBall: 5
+  _idLevel: 4
+  _isExemple: 0
+  _isInstantiate: 0

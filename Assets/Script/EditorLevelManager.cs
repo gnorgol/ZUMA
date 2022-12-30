@@ -27,6 +27,7 @@ public class EditorLevelManager : Manager<EditorLevelManager>
     private Button LastButtonClick;
     private bool _IsButtonClicked = false;
     private GameObject _SphereInstantiate;
+    [SerializeField] private GameObject _Player;
 
     public FunctionEditorLevel FunctionEditorLevelActive { get => _FunctionEditorLevelActive; set => _FunctionEditorLevelActive = value; }
 
@@ -64,6 +65,8 @@ public class EditorLevelManager : Manager<EditorLevelManager>
         Debug.Log("Level editor has been instantiated");
         //Instantiate the level editor
         _EditorLevelInstance = Instantiate(_EditorLevel);
+        //Set the script saver to the level editor
+        _EditorLevelInstance.AddComponent<Saver>();
     }
     private void MainMenuButtonClicked(MainMenuButtonClickedEvent e)
     {
@@ -103,7 +106,15 @@ public class EditorLevelManager : Manager<EditorLevelManager>
                 EventManager.Instance.Raise(new SaveButtonEditorLevelClickedEvent());
                 break;
             case FunctionEditorLevel.Play:
-                EventManager.Instance.Raise(new PlayButtonEditorLevelClickedEvent());
+                if (_EditorLevelInstance.GetComponent<BezierSpline>().CtrlTransform.Count >= 4)
+                {
+                    EventManager.Instance.Raise(new PlayButtonEditorLevelClickedEvent());
+                }
+                else
+                {
+                    Debug.Log("You need at least 4 points to play");
+                }
+
                 break;
             case FunctionEditorLevel.None:
                 break;
@@ -148,7 +159,7 @@ public class EditorLevelManager : Manager<EditorLevelManager>
                         if (EditSphere == null)
                         {
                             CreateSphere();
-                            EventManager.Instance.Raise(new AddSphereEvent() { Sphere = _SphereInstantiate });
+                            
                         }
                         break;
                     case FunctionEditorLevel.Move:
@@ -193,37 +204,45 @@ public class EditorLevelManager : Manager<EditorLevelManager>
     #region Methods
     private void CreateSphere()
     {
-        //Instantiate a sphere
-        _SphereInstantiate = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-        _SphereInstantiate.transform.position = new Vector3(0, 0, 0);
-        _SphereInstantiate.transform.localScale = new Vector3(1, 1, 1);
+
         //Place the sphere on the position of the mouse
         RaycastHit hit;
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         if (Physics.Raycast(ray, out hit, 1000))
         {
-            _SphereInstantiate.transform.position = hit.point;
+            //if the raycast not near the player
+            Debug.Log("Distance player hit : "+Vector3.Distance(hit.point, _Player.transform.position));
+            if (Vector3.Distance(hit.point, _Player.transform.position) > 18.7)
+            {
+                //Instantiate a sphere
+                _SphereInstantiate = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                _SphereInstantiate.transform.position = new Vector3(0, 0, 0);
+                _SphereInstantiate.transform.localScale = new Vector3(1, 1, 1);
+                _SphereInstantiate.transform.position = new Vector3(hit.point.x, hit.point.y, 0);
+                //remove the collider of the sphere
+                Destroy(_SphereInstantiate.GetComponent<SphereCollider>());
+                //add tag EditSphere
+                _SphereInstantiate.tag = "EditSphere";
+                //add script DragSphere
+                _SphereInstantiate.AddComponent<DragSphere>();
+                //add mesh collider
+                _SphereInstantiate.AddComponent<MeshCollider>();
+                //Set trigger to true
+                _SphereInstantiate.GetComponent<Collider>().isTrigger = true;
+                //add rigidbody
+                _SphereInstantiate.AddComponent<Rigidbody>();
+                //set rigidbody to kinematic
+                _SphereInstantiate.GetComponent<Rigidbody>().isKinematic = true;
+                //set rigidbody to use gravity
+                _SphereInstantiate.GetComponent<Rigidbody>().useGravity = false;
+                //set rigidbody Interpolate to true
+                _SphereInstantiate.GetComponent<Rigidbody>().interpolation = RigidbodyInterpolation.Interpolate;
+                //Set parent to the _EditorLevelInstance
+                _SphereInstantiate.transform.parent = _EditorLevelInstance.transform;
+                EventManager.Instance.Raise(new AddSphereEvent() { Sphere = _SphereInstantiate });
+            }            
         }
-        //remove the collider of the sphere
-        Destroy(_SphereInstantiate.GetComponent<SphereCollider>());
-        //add tag EditSphere
-        _SphereInstantiate.tag = "EditSphere";
-        //add script DragSphere
-        _SphereInstantiate.AddComponent<DragSphere>();
-        //add mesh collider
-        _SphereInstantiate.AddComponent<MeshCollider>();
-        //Set trigger to true
-        _SphereInstantiate.GetComponent<Collider>().isTrigger = true;
-        //add rigidbody
-        _SphereInstantiate.AddComponent<Rigidbody>();
-        //set rigidbody to kinematic
-        _SphereInstantiate.GetComponent<Rigidbody>().isKinematic = true;
-        //set rigidbody to use gravity
-        _SphereInstantiate.GetComponent<Rigidbody>().useGravity = false;
-        //set rigidbody Interpolate to true
-        _SphereInstantiate.GetComponent<Rigidbody>().interpolation = RigidbodyInterpolation.Interpolate;
-        //Set parent to the _EditorLevelInstance
-        _SphereInstantiate.transform.parent = _EditorLevelInstance.transform;
+        
 
 
     }

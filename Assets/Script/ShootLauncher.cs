@@ -63,13 +63,14 @@ public class ShootLauncher : MonoBehaviour
     private void Start()
     {
         m_NextShootTime = Time.time;
+        
 
     }
     private void Update()
     {
-        SetBallPostion();
         if (GameManager.Instance.IsPlaying)
         {
+            SetBallPostion();
             if (Input.GetKeyDown(KeyCode.Mouse0) && Time.time > m_NextShootTime)
             {
                 Shoot();

@@ -105,9 +105,10 @@ public class GameLevelChangedEvent : SDD.Events.Event
 public class FinishCurveEvent : SDD.Events.Event
 {
 }
-public class InstantiateLevelExempleEvent : SDD.Events.Event
+public class UpdateListLevelEvent : SDD.Events.Event
 {
 }
+
 public class DestroyLevelExempleEvent : SDD.Events.Event
 {
 }
@@ -135,7 +136,7 @@ public class DeleteSphereEvent : SDD.Events.Event
 public class MoveSphereEvent : SDD.Events.Event
 {
 }
-public class SaveLevelEvent : SDD.Events.Event
+public class SaveCurveEvent : SDD.Events.Event
 {
 }
 public class PlayButtonEditorLevelClickedEvent : SDD.Events.Event
