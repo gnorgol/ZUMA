@@ -74,8 +74,6 @@ public class GameManager : Manager<GameManager>
     [SerializeField]
     private List<string> _ListSaveLevel;
     [SerializeField]
-    private string PathFileSaveLevel = "Assets/Resources/SaveCurves/";
-    [SerializeField]
     private Material _materialLineRenderer;
     [SerializeField] private List<GameObject> listBall;
     public List<GameObject> ListLevel { get => m_ListLevel; set => m_ListLevel = value; }
@@ -427,13 +425,14 @@ public class GameManager : Manager<GameManager>
     }
     private void GetAllSaveLevel()
     {
-        string[] files = Directory.GetFiles(PathFileSaveLevel,"*.dat");
+        string[] files = Directory.GetFiles(Application.persistentDataPath, "*.dat");
         _ListSaveLevel = files.Select(x => Path.GetFileNameWithoutExtension(x)).ToList();
     }
     private GameObject LoadLevel(string fileName)
     {
         BinaryFormatter formatter = new BinaryFormatter();
-        FileStream stream = new FileStream(PathFileSaveLevel + fileName + ".dat", FileMode.Open);
+        //FileStream stream = new FileStream(PathFileSaveLevel + fileName + ".dat", FileMode.Open);
+        FileStream stream = new FileStream(Application.persistentDataPath + "/" + fileName + ".dat", FileMode.Open);
         GameData gameData = formatter.Deserialize(stream) as GameData;
         stream.Close();
 
