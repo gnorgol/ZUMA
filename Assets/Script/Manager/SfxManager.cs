@@ -3,14 +3,19 @@ using System.Collections.Generic;
 using UnityEngine;
 using SDD.Events;
 using System;
+using UnityEngine.UI;
 
 public class SfxManager : MonoBehaviour
 {
     [SerializeField] private AudioClip PlayerShootSound,ClickButton,MusicMenu,MusicGameplay,GainScore;
     private AudioSource audioSrc;
+    [SerializeField] private Sprite MusicOn, MusicOff;
+    [SerializeField] private List<Button> ListMuteButton;
+
     private void OnEnable()
     {
         SubscribeEvents();
+        
     }
     private void OnDisable()
     {
@@ -22,6 +27,7 @@ public class SfxManager : MonoBehaviour
         EventManager.Instance.AddListener<GameMenuEvent>(OnGameMenu);
         EventManager.Instance.AddListener<GamePlayEvent>(OnGamePlay);
         EventManager.Instance.AddListener<GainScoreEvent>(OnGainScore);
+        EventManager.Instance.AddListener<ClickButtonMuteEvent>(OnClickButtonMute);
     }
     private void UnsubscribeEvents()
     {
@@ -29,6 +35,7 @@ public class SfxManager : MonoBehaviour
         EventManager.Instance.RemoveListener<GameMenuEvent>(OnGameMenu);
         EventManager.Instance.RemoveListener<GamePlayEvent>(OnGamePlay);
         EventManager.Instance.RemoveListener<GainScoreEvent>(OnGainScore);
+        EventManager.Instance.RemoveListener<ClickButtonMuteEvent>(OnClickButtonMute);
 
 
     }
@@ -58,16 +65,36 @@ public class SfxManager : MonoBehaviour
         audioSrc.clip = MusicGameplay;
         audioSrc.Play();
     }
-    private void Awake()
+    public bool IsMute
     {
-        
+        get { return PlayerPrefs.GetInt("IsMute", 0) == 1; }
+        set
+        {
+            PlayerPrefs.SetInt("IsMute", value ? 1 : 0);
+            PlayerPrefs.Save();
+            audioSrc.mute = value;
+        }
+    }
+    private void Awake()
+    {        
         audioSrc = GetComponent<AudioSource>();
+        audioSrc.mute = IsMute;
+        foreach (Button button in ListMuteButton)
+        {
+            //set the sprite of the button
+            button.image.sprite = IsMute ? MusicOff : MusicOn;
+        }
     }
 
 
     public void PlayClickButton()
     {
         audioSrc.PlayOneShot(ClickButton);
+    }
+    private void OnClickButtonMute(ClickButtonMuteEvent e)
+    {
+        IsMute = !IsMute;
+        e.button.GetComponent<UnityEngine.UI.Image>().sprite = IsMute ? MusicOff : MusicOn;
     }
 
 }

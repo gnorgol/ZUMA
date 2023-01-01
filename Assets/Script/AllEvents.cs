@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using SDD.Events;
+using UnityEngine.UI;
 
 #region GameManager Events
 public class GameMenuEvent : SDD.Events.Event
@@ -119,7 +120,10 @@ public class DestroyInstanceBallEvent : SDD.Events.Event
 public class PlayerShootEvent : SDD.Events.Event
 {
 }
-
+public class ClickButtonMuteEvent : SDD.Events.Event
+{
+	public Button button;
+}
 
 
 #endregion

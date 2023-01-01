@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using SDD.Events;
+using UnityEngine.UI;
 
 public class MenuManager : Manager<MenuManager>
 {
@@ -127,6 +128,10 @@ public class MenuManager : Manager<MenuManager>
     public void EditLevelButtonHasBeenClicked()
     {
         EventManager.Instance.Raise(new EditLevelButtonHasBeenClickedEvent());
+    }
+    public void ButtonMuteHasBeenClicked(Button button)
+    {
+        EventManager.Instance.Raise(new ClickButtonMuteEvent() { button = button });
     }
     #endregion
 
