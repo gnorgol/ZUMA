@@ -28,6 +28,9 @@ public class GameVictoryEvent : SDD.Events.Event
 public class GameCreditEvent : SDD.Events.Event
 {
 }
+public class GameSettingEvent : SDD.Events.Event
+{
+}
 public class GameEditorLevelEvent : SDD.Events.Event
 {
 }
@@ -59,6 +62,9 @@ public class QuitButtonClickedEvent : SDD.Events.Event
 {
 }
 public class CreditButtonClickedEvent : SDD.Events.Event
+{
+}
+public class SettingButtonClickedEvent : SDD.Events.Event
 {
 }
 public class EditLevelButtonHasBeenClickedEvent : SDD.Events.Event

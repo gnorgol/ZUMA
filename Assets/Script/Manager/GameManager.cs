@@ -10,7 +10,7 @@ using UnityEditor;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 
-public enum GameState { gameMenu, gamePlay, gameNextLevel, gamePause, gameOver, gameVictory, gameCredit, gameEditLevel }
+public enum GameState { gameMenu, gamePlay, gameNextLevel, gamePause, gameOver, gameVictory, gameCredit, gameSetting, gameEditLevel }
 
 public class GameManager : Manager<GameManager>
 {
@@ -23,6 +23,14 @@ public class GameManager : Manager<GameManager>
     public bool IsMenu { get { return m_GameState == GameState.gameMenu; } }
 
     public bool IsPause { get { return m_GameState == GameState.gamePause; } }
+
+    public bool IsGameOver { get { return m_GameState == GameState.gameOver; } }
+
+    public bool IsVictory { get { return m_GameState == GameState.gameVictory; } }
+
+    public bool IsCredit { get { return m_GameState == GameState.gameCredit; } }
+
+    public bool IsSetting { get { return m_GameState == GameState.gameSetting; } }
     #endregion
     #region Score
     private float m_Score;
@@ -179,6 +187,7 @@ public class GameManager : Manager<GameManager>
         EventManager.Instance.AddListener<EscapeButtonClickedEvent>(EscapeButtonClicked);
         EventManager.Instance.AddListener<QuitButtonClickedEvent>(QuitButtonClicked);
         EventManager.Instance.AddListener<SelectLevelButtonHasBeenClickedEvent>(SelectLevelButtonHasBeenClicked);
+        EventManager.Instance.AddListener<SettingButtonClickedEvent>(OptionButtonHasBeenClicked);
         EventManager.Instance.AddListener<CreditButtonClickedEvent>(CreditButtonClicked);
         EventManager.Instance.AddListener<EditLevelButtonHasBeenClickedEvent>(EditLevelButtonHasBeenClicked);
         //Score Item
@@ -204,6 +213,7 @@ public class GameManager : Manager<GameManager>
         EventManager.Instance.RemoveListener<EscapeButtonClickedEvent>(EscapeButtonClicked);
         EventManager.Instance.RemoveListener<QuitButtonClickedEvent>(QuitButtonClicked);
         EventManager.Instance.RemoveListener<SelectLevelButtonHasBeenClickedEvent>(SelectLevelButtonHasBeenClicked);
+        EventManager.Instance.RemoveListener<SettingButtonClickedEvent>(OptionButtonHasBeenClicked);
         EventManager.Instance.RemoveListener<CreditButtonClickedEvent>(CreditButtonClicked);
         EventManager.Instance.RemoveListener<EditLevelButtonHasBeenClickedEvent>(EditLevelButtonHasBeenClicked);
         //Score Item
@@ -214,6 +224,8 @@ public class GameManager : Manager<GameManager>
         EventManager.Instance.RemoveListener<SaveCurveEvent>(SaveCurve);
 
     }
+
+
 
 
     #endregion
@@ -285,6 +297,10 @@ public class GameManager : Manager<GameManager>
     private void CreditButtonClicked(CreditButtonClickedEvent e)
     {
         Credit();
+    }
+    private void OptionButtonHasBeenClicked(SettingButtonClickedEvent e)
+    {
+        Option();
     }
     private void EditLevelButtonHasBeenClicked(EditLevelButtonHasBeenClickedEvent e)
     {
@@ -371,6 +387,15 @@ public class GameManager : Manager<GameManager>
         SetTimeScale(0);
         m_GameState = GameState.gameCredit;
         EventManager.Instance.Raise(new GameCreditEvent());
+    }
+    private void Option()
+    {
+        if (IsPlaying) return;
+        m_Player.SetActive(false);
+        m_Ground.SetActive(false);
+        SetTimeScale(0);
+        m_GameState = GameState.gameSetting;
+        EventManager.Instance.Raise(new GameSettingEvent());
     }
     private void EditLevel()
     {
