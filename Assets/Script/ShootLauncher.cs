@@ -50,7 +50,7 @@ public class ShootLauncher : MonoBehaviour
     }
     private void AllColorsBallsCurve(AllColorsBallsCurveEvent e)
     {
-        _ListColorsCurve = e.ListColorsCurve;
+        _ListColorsCurve = e.ListColorsCurve ?? new List<Color>();
     }
 
     private void GameLevelChanged(GameLevelChangedEvent e)
@@ -89,16 +89,42 @@ public class ShootLauncher : MonoBehaviour
     }
     void CheckColorInstanceBall()
     {
-        //If Color InstanceBallForward is not in ListColorsCurve then change color
-        if (!_ListColorsCurve.Contains(instanceBallForward.GetComponent<Renderer>().material.color))
+        if (instanceBallForward == null || instanceBallBack == null) return;
+        if (_ListColorsCurve == null || _ListColorsCurve.Count == 0) return;
+
+        // Forward
+        var fwdR = instanceBallForward.GetComponent<Renderer>();
+        if (fwdR != null)
         {
-            ChangeColor(instanceBallForward);
+            var cur = fwdR.material.color;
+            if (!_ListColorsCurve.Contains(cur))
+            {
+                SetToNearestAvailableColor(instanceBallForward);
+            }
         }
-        //If Color InstanceBallBack is not in ListColorsCurve then change color
-        if (!_ListColorsCurve.Contains(instanceBallBack.GetComponent<Renderer>().material.color))
+        // Back
+        var backR = instanceBallBack.GetComponent<Renderer>();
+        if (backR != null)
         {
-            ChangeColor(instanceBallBack);
+            var cur = backR.material.color;
+            if (!_ListColorsCurve.Contains(cur))
+            {
+                SetToNearestAvailableColor(instanceBallBack);
+            }
         }
+    }
+    private void SetToNearestAvailableColor(GameObject ball)
+    {
+        if (ball == null || _ListColorsCurve == null || _ListColorsCurve.Count == 0) return;
+        // Map our four materials to colors and pick a deterministic choice from available list
+        // Prefer to keep current index family (ballColor) if that color exists; otherwise pick the first available.
+        List<Color> palette = new List<Color> { ColorRed.color, ColorGreen.color, ColorBlue.color, ColorYellow.color };
+        Color desired = palette[Mathf.Clamp(ballColor, 0, palette.Count - 1)];
+        int idx = _ListColorsCurve.IndexOf(desired);
+        if (idx < 0) desired = _ListColorsCurve[0];
+        // Apply
+        var r = ball.GetComponent<Renderer>();
+        if (r != null) r.material.SetColor("_Color", desired);
     }
     void ResetInstanceBall()
     {
