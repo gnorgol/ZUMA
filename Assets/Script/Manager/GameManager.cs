@@ -170,6 +170,18 @@ public class GameManager : Manager<GameManager>
         currentLevel.name = "Level_" + currentIdLevel;
         currentLevel.GetComponent<BezierSpline>().enabled = true;
         currentLevel.GetComponent<BezierSpline>().SetInstantiate(true);
+        // Juice tuning per level
+        var bs = currentLevel.GetComponent<BezierSpline>();
+        if (bs != null)
+        {
+            // Légère augmentation de vitesse et d'easing sur niveaux 2 et 3
+            if (currentIdLevel == 2 || currentIdLevel == 3)
+            {
+                bs.TranslationSpeed *= 1.12f; // +12%
+                bs.SetGapCloseTuning(0.26f, 1.4f);
+                bs.SetInsertionTuning(0.18f, 1.3f);
+            }
+        }
     }
 
 
@@ -233,7 +245,7 @@ public class GameManager : Manager<GameManager>
     protected override IEnumerator InitCoroutine()
     {
         Menu();
-        InitNewGame(); // essentiellement pour que les statistiques du jeu soient mise � jour en HUD
+        InitNewGame(); // essentiellement pour que les statistiques du jeu soient mise � jour en HUD
         GetAllSaveLevel();
         UpdateListDropDown();
 

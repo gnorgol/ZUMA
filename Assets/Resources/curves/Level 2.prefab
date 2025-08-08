@@ -650,9 +650,9 @@ MonoBehaviour:
   - {fileID: 1383379182736919966}
   - {fileID: 1383379184604136769}
   - {fileID: 1383379183788316103}
-  m_NbPtsOnSpline: 1
+  m_NbPtsOnSpline: 2
   m_IsClosed: 0
-  m_PtsDensity: 1
+  m_PtsDensity: 2
   ListeMovingObject: []
   m_TranslationSpeed: 2
   m_Direction: 0
@@ -666,6 +666,14 @@ MonoBehaviour:
   _idLevel: 2
   _isExemple: 0
   _isInstantiate: 0
+  _gapCloseSpeed: 0.24
+  _gapCloseDuration: 1.5
+  _gapCloseBackOvershoot: 0.14
+  _spacingMultiplier: 1.025
+  _loopTightenDuration: 0.1
+  _loopBackOvershoot: 1.12
+  _insertDuration: 2.3
+  _insertBackOvershoot: 1.25
 --- !u!120 &2714761230263567211
 LineRenderer:
   m_ObjectHideFlags: 0

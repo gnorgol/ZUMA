@@ -172,6 +172,14 @@ MonoBehaviour:
   _idLevel: 1
   _isExemple: 0
   _isInstantiate: 0
+  _gapCloseSpeed: 0.24
+  _gapCloseDuration: 1.3
+  _gapCloseBackOvershoot: 0.18
+  _spacingMultiplier: 1.02
+  _loopTightenDuration: 0.12
+  _loopBackOvershoot: 1.15
+  _insertDuration: 2.4
+  _insertBackOvershoot: 1.28
 --- !u!120 &-4927135028137328834
 LineRenderer:
   m_ObjectHideFlags: 0

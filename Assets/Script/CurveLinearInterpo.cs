@@ -131,52 +131,76 @@ public class CurveLinearInterpo
     public bool GetSphereSplineIntersection(Vector3 centre, float radius, int startIndex, int direction, out Vector3 position, out int segmentIndex)
     {
         position = Vector3.zero;
-        Vector3 ABLength = Vector3.zero;
         segmentIndex = startIndex;
-        float delta;
-        float t = -1;
-        int stopWhile = 0;
-        int index = startIndex + 1;
         if (!IsValid && (direction == 1 || direction == -1))
         {
             return false;
         }
 
-        while ((t < 0 || 1 < t) && stopWhile < _ListPts.Count)
+        // Clamp starting index to a valid segment and do NOT skip the first segment.
+        int index = Mathf.Clamp(startIndex, 0, _ListPts.Count - 2);
+
+        // Search along the polyline until we find a valid intersection with the circle of radius around 'centre'.
+        for (int step = 0; step < _ListPts.Count; step++)
         {
-            index = index + direction;
-            if (index < 0 && direction == -1)
-            {
-                index = _ListPts.Count - 2;
-            }
-            if (index > _ListPts.Count - 2 && direction == 1)
-            {
-                index = 0;
-            }
             Vector3 A = _ListPts[index];
             Vector3 B = _ListPts[index + 1];
             Vector3 AB = B - A;
             Vector3 CentreA = A - centre;
 
             float a = Vector3.Dot(AB, AB);
-            float b = 2 * Vector3.Dot(CentreA, AB);
-            float c = Vector3.Dot(CentreA, CentreA) - Mathf.Pow(radius, 2);
-            ABLength = AB;
-            delta = Mathf.Pow(b, 2) - 4 * a * c;
+            float b = 2f * Vector3.Dot(CentreA, AB);
+            float c = Vector3.Dot(CentreA, CentreA) - (radius * radius);
+            float delta = (b * b) - (4f * a * c);
 
-            if (delta >= 0)
+            if (delta >= 0f && a > 1e-6f)
             {
-                t = (-b + Mathf.Sqrt(delta) * direction) / (2 * a);
+                float sqrtDelta = Mathf.Sqrt(delta);
+                float t1 = (-b - sqrtDelta) / (2f * a);
+                float t2 = (-b + sqrtDelta) / (2f * a);
+
+                // Choose the root consistent with the marching direction along AB.
+                float tCandidate = -1f;
+                if (direction >= 0)
+                {
+                    // Prefer the intersection closer to B (larger t) within [0,1]
+                    bool t1ok = t1 >= 0f && t1 <= 1f;
+                    bool t2ok = t2 >= 0f && t2 <= 1f;
+                    if (t1ok && t2ok) tCandidate = Mathf.Max(t1, t2);
+                    else if (t1ok) tCandidate = t1;
+                    else if (t2ok) tCandidate = t2;
+                }
+                else
+                {
+                    // Prefer the intersection closer to A (smaller t) within [0,1]
+                    bool t1ok = t1 >= 0f && t1 <= 1f;
+                    bool t2ok = t2 >= 0f && t2 <= 1f;
+                    if (t1ok && t2ok) tCandidate = Mathf.Min(t1, t2);
+                    else if (t1ok) tCandidate = t1;
+                    else if (t2ok) tCandidate = t2;
+                }
+
+                if (tCandidate >= 0f && tCandidate <= 1f)
+                {
+                    // Found a valid intersection point on this segment.
+                    position = A + AB * tCandidate;
+                    segmentIndex = index;
+                    return true;
+                }
             }
-            else
-            {
-                t = -1;
-            }
-            stopWhile++;
+
+            // Advance to next segment according to direction, with wrap-around compatible with previous behavior.
+            index += direction >= 0 ? 1 : -1;
+            if (index < 0)
+                index = _ListPts.Count - 2;
+            if (index > _ListPts.Count - 2)
+                index = 0;
         }
 
-        segmentIndex = index;
-        return GetPositionFromDistance(_ListLength[index] + t * ABLength.magnitude + 0 * direction, out position);
+        // No intersection found (shouldn't happen with reasonable input)
+        position = _ListPts[Mathf.Clamp(index, 0, _ListPts.Count - 1)];
+        segmentIndex = Mathf.Clamp(index, 0, _ListPts.Count - 2);
+        return true;
     }
     Vector3 ComputeBezierPos(Vector3 a, Vector3 b, Vector3 c, Vector3 d, float t)
     {

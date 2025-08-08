@@ -17,7 +17,7 @@ public class BezierSpline : MonoBehaviour
     CurveLinearInterpo m_MyCurve;
     [SerializeField] List<Transform> ListeMovingObject;
     [SerializeField] float m_TranslationSpeed;
-    [SerializeField] bool m_Direction = false;
+    [SerializeField] bool m_Direction = true; // true = forward along curve
     [SerializeField] bool _Repeat = false;
     float m_TranslatedDistance = 0;
     [SerializeField] List<GameObject> _ListBall;
@@ -27,6 +27,37 @@ public class BezierSpline : MonoBehaviour
     private bool IsSelected = false;
     [SerializeField] private bool _isExemple = false;
     [SerializeField] private bool _isInstantiate = false;
+    // Gap closing state (only the trailing segment moves forward)
+    [SerializeField] private float _gapCloseSpeed = 8f; // conservé si on revient à MoveTowards
+    private bool _isClosingGap = false;
+    private int _gapIndex = -1; // first ball index after removed block
+    private float _gapOffset = 0f; // current offset distance behind the previous ball
+    // Easing parameters for gap closing
+    [SerializeField] private float _gapCloseDuration = 0.35f; // plus long pour bien voir le mouvement
+    [SerializeField] private float _gapCloseBackOvershoot = 1.35f; // plus d'overshoot
+    private float _gapInitialOffset = 0f;
+    private float _gapTime = 0f;
+    // Slight spacing multiplier to avoid z-fight/overlap
+    [SerializeField, Range(1.0f, 1.2f)] private float _spacingMultiplier = 1.02f;
+    // Loop tightening (last ball vs head) to avoid overlap on closed curves without teleport
+    [SerializeField] private float _loopTightenDuration = 0.12f;
+    [SerializeField] private float _loopBackOvershoot = 1.15f;
+    private bool _isLoopTightening = false;
+    private float _loopOffset = 0f;
+    private float _loopInitialOffset = 0f;
+    private float _loopTime = 0f;
+    // Insertion local recoil (autour du point d'insertion)
+    [SerializeField] private float _insertDuration = 0.16f;
+    [SerializeField] private float _insertBackOvershoot = 1.25f;
+    private bool _isInserting = false;
+    private int _insertIndex = -1;
+    private float _insertOffset = 0f;
+    private float _insertInitialOffset = 0f;
+    private float _insertTime = 0f;
+    // Scale punch cache
+    private Dictionary<Transform, Coroutine> _scaleRoutines;
+    // Ensure balls spawn exactly once per instance
+    private bool _spawnedBalls = false;
     public List<Transform> CtrlTransform { get => m_CtrlTransform; set => m_CtrlTransform = value; }
     public int NbBall { get => _nbBall; set => _nbBall = value; }
     public int IdLevel { get => _idLevel; set => _idLevel = value; }
@@ -48,7 +79,7 @@ public class BezierSpline : MonoBehaviour
         m_NbPtsOnSpline = nbPtsOnSpline;
         m_IsClosed = isClosed;
         m_PtsDensity = ptsDensity;
-        translationSpeed = m_TranslationSpeed;
+    m_TranslationSpeed = translationSpeed;
         m_Direction = direction;
         _Repeat = repeat;
         this._nbBall = nbBall;
@@ -114,12 +145,16 @@ public class BezierSpline : MonoBehaviour
         int index = ListeMovingObject.IndexOf(e.target.transform);
         ListeMovingObject.Insert(index, e.ball.transform);
         GetAllColorsMovingObject();
+    // Pas de recul global: l'insertion restera locale
+    ScalePunchNeighbors(index);
     }
     private void putBallBack(putBallBackEvent e)
     {
         int index = ListeMovingObject.IndexOf(e.target.transform);
         ListeMovingObject.Insert(index + 1, e.ball.transform);
         GetAllColorsMovingObject();
+    // Pas de recul global: l'insertion restera locale
+    ScalePunchNeighbors(index + 1);
     }
     private void CheckMatchBalls(CheckMatchBallsEvent e)
     {
@@ -176,6 +211,34 @@ public class BezierSpline : MonoBehaviour
         }
         ListeMovingObject.RemoveRange(index, range);
         GetAllColorsMovingObject();
+        // Init gap closing animation (only if there is a head and a tail)
+        if (index > 0 && index < ListeMovingObject.Count)
+        {
+            _isClosingGap = true;
+            _gapIndex = index; // first ball after the removed block
+            // Estimate gap size by diameters of removed balls
+            float radius = 0.5f;
+            if (ListeMovingObject.Count > 0)
+            {
+                var first = ListeMovingObject[0];
+                var sc = first.GetComponent<SphereCollider>();
+                if (sc != null) radius = sc.radius * first.localScale.x;
+            }
+            float diameter = radius * 2f;
+            _gapOffset = Mathf.Max(diameter * range, diameter); // avoid zero-length
+            _gapInitialOffset = _gapOffset;
+            _gapTime = 0f;
+            // Visual punch on boundaries of the gap
+            ScalePunchAtRemovalBoundaries(index);
+        }
+        else
+        {
+            _isClosingGap = false;
+            _gapIndex = -1;
+            _gapOffset = 0f;
+            _gapInitialOffset = 0f;
+            _gapTime = 0f;
+        }
     }
 
 
@@ -211,13 +274,17 @@ public class BezierSpline : MonoBehaviour
     private void Awake()
     {
         lineRenderer = this.GetComponent<LineRenderer>();
-        CreateBall();
+    if (_scaleRoutines == null) _scaleRoutines = new Dictionary<Transform, Coroutine>();
+    if (ListeMovingObject == null) ListeMovingObject = new List<Transform>();
     }
     private void Start()
     {
-        
         UpdateCurve();
-
+        if (!_spawnedBalls)
+        {
+            CreateBall();
+            _spawnedBalls = true;
+        }
     }
 
     private void Update()
@@ -229,6 +296,8 @@ public class BezierSpline : MonoBehaviour
         int currentIndex = -1;
         if (m_CtrlTransform.Count >= 4 && GameManager.Instance.IsPlaying || _isExemple || EditorLevelManager.Instance.FunctionEditorLevelActive == FunctionEditorLevel.Play)
         {
+            int dirSign = (m_TranslationSpeed >= 0f) ? 1 : -1;
+            Vector3 headPos = Vector3.zero; int headSegIndex = -1; float headRadius = 0f; Transform headTr = null;
             for (int i = 0; i < ListeMovingObject.Count; i++)
             {
                 Transform item = ListeMovingObject[i];
@@ -245,17 +314,129 @@ public class BezierSpline : MonoBehaviour
 
                     }
                     item.position = currentposition;
+                    // Orient along spline tangent
+                    Vector3 tangent = (m_MyCurve.ListPts[Mathf.Min(currentIndex + 1, m_MyCurve.ListPts.Count - 1)] - m_MyCurve.ListPts[Mathf.Max(currentIndex, 0)]).normalized;
+                    if (tangent.sqrMagnitude > 0.0001f) item.forward = tangent * dirSign;
+                    headPos = currentposition;
+                    headSegIndex = currentIndex;
+                    headRadius = currentRadious;
+                    headTr = item;
                 }
-                else if (m_MyCurve.GetSphereSplineIntersection(previousPosition, previousRadius + currentRadious, previousIndex, m_Direction ? 1 : -1, out currentposition, out currentIndex))
+                else
                 {
-                    item.position = currentposition;
+                    // En phase de fermeture de trou: pour le premier élément après le gap,
+                    // on recule artificiellement le centre sur la tangente pour créer un retard qui sera comblé progressivement.
+                    Vector3 centreForIntersection = previousPosition;
+                    int startIdxForIntersection = previousIndex;
+                    if (_isClosingGap && i == _gapIndex)
+                    {
+                        // Approxime la tangente locale au point précédent
+                        Vector3 prevTangent = (m_MyCurve.ListPts[Mathf.Min(previousIndex + 1, m_MyCurve.ListPts.Count - 1)] - m_MyCurve.ListPts[Mathf.Max(previousIndex, 0)]).normalized;
+                        if (prevTangent.sqrMagnitude < 0.0001f)
+                        {
+                            prevTangent = item.forward;
+                        }
+                        centreForIntersection = previousPosition - prevTangent * _gapOffset;
+                        startIdxForIntersection = previousIndex;
+                    }
+                    // Insertion locale: décale la nouvelle boule pour un léger retard
+                    else if (_isInserting && i == _insertIndex)
+                    {
+                        Vector3 prevTangent = (m_MyCurve.ListPts[Mathf.Min(previousIndex + 1, m_MyCurve.ListPts.Count - 1)] - m_MyCurve.ListPts[Mathf.Max(previousIndex, 0)]).normalized;
+                        if (prevTangent.sqrMagnitude < 0.0001f)
+                        {
+                            prevTangent = item.forward;
+                        }
+                        centreForIntersection = previousPosition - prevTangent * _insertOffset;
+                        startIdxForIntersection = previousIndex;
+                    }
+                    // Loop tightening: applique un léger retard sur la dernière boule pour l'écarter de la tête
+                    else if (_isLoopTightening && i == ListeMovingObject.Count - 1)
+                    {
+                        Vector3 prevTangent = (m_MyCurve.ListPts[Mathf.Min(previousIndex + 1, m_MyCurve.ListPts.Count - 1)] - m_MyCurve.ListPts[Mathf.Max(previousIndex, 0)]).normalized;
+                        if (prevTangent.sqrMagnitude < 0.0001f)
+                        {
+                            prevTangent = item.forward;
+                        }
+                        centreForIntersection = previousPosition - prevTangent * _loopOffset;
+                        startIdxForIntersection = previousIndex;
+                    }
+
+                    if (m_MyCurve.GetSphereSplineIntersection(centreForIntersection, (previousRadius + currentRadious) * _spacingMultiplier, startIdxForIntersection, m_Direction ? 1 : -1, out currentposition, out currentIndex))
+                    {
+                        item.position = currentposition;
+                        // Orient along spline tangent
+                        Vector3 tangent = (m_MyCurve.ListPts[Mathf.Min(currentIndex + 1, m_MyCurve.ListPts.Count - 1)] - m_MyCurve.ListPts[Mathf.Max(currentIndex, 0)]).normalized;
+                        if (tangent.sqrMagnitude > 0.0001f) item.forward = tangent * dirSign;
+                    }
                 }
                 previousRadius = currentRadious;
                 previousPosition = currentposition;
                 previousIndex = currentIndex;
 
             }
-            m_TranslatedDistance += m_TranslationSpeed * Time.deltaTime;
+            // Active le loop tightening si la queue s'approche trop de la tête (sans téléport)
+            if (_isClosingGap && m_IsClosed && ListeMovingObject.Count > 1 && headTr != null)
+            {
+                Transform lastTr = ListeMovingObject[ListeMovingObject.Count - 1];
+                if (lastTr != null)
+                {
+                    float lastRadius = lastTr.GetComponent<SphereCollider>().radius * lastTr.localScale.x;
+                    float minDist = (headRadius + lastRadius) * _spacingMultiplier;
+                    float realDist = Vector3.Distance(lastTr.position, headPos);
+                    if (realDist < minDist && !_isLoopTightening)
+                    {
+                        _isLoopTightening = true;
+                        _loopInitialOffset = Mathf.Max(minDist - realDist, 0.01f);
+                        _loopOffset = _loopInitialOffset;
+                        _loopTime = 0f;
+                    }
+                }
+            }
+            // Anime la fermeture du trou si active
+            if (_isClosingGap)
+            {
+                _gapTime += Time.deltaTime;
+                float tNorm = Mathf.Clamp01(_gapTime / Mathf.Max(0.01f, _gapCloseDuration));
+                float eased = EaseOutBack(tNorm, _gapCloseBackOvershoot);
+                _gapOffset = Mathf.Max(0f, _gapInitialOffset * (1f - eased));
+                if (tNorm >= 1f || _gapOffset <= 0.0001f)
+                {
+                    _gapOffset = 0f;
+                    _isClosingGap = false;
+                    _gapIndex = -1;
+                }
+            }
+            if (_isInserting)
+            {
+                _insertTime += Time.deltaTime;
+                float tNorm = Mathf.Clamp01(_insertTime / Mathf.Max(0.01f, _insertDuration));
+                float eased = EaseOutBack(tNorm, _insertBackOvershoot);
+                _insertOffset = Mathf.Max(0f, _insertInitialOffset * (1f - eased));
+                if (tNorm >= 1f || _insertOffset <= 0.0001f)
+                {
+                    _insertOffset = 0f;
+                    _isInserting = false;
+                    _insertIndex = -1;
+                }
+            }
+            if (_isLoopTightening)
+            {
+                _loopTime += Time.deltaTime;
+                float tNorm = Mathf.Clamp01(_loopTime / Mathf.Max(0.01f, _loopTightenDuration));
+                float eased = EaseOutBack(tNorm, _loopBackOvershoot);
+                _loopOffset = Mathf.Max(0f, _loopInitialOffset * (1f - eased));
+                if (tNorm >= 1f || _loopOffset <= 0.0001f)
+                {
+                    _loopOffset = 0f;
+                    _isLoopTightening = false;
+                }
+            }
+            // Stop global head movement while closing a gap so the head waits for the tail
+            if (!_isClosingGap)
+            {
+                m_TranslatedDistance += m_TranslationSpeed * Time.deltaTime;
+            }
         }
         else
         {
@@ -280,6 +461,118 @@ public class BezierSpline : MonoBehaviour
 
 
     }
+    private float EaseOutBack(float t, float s)
+    {
+        // Standard EaseOutBack: t in [0,1]
+        t = t - 1f;
+        return 1f + (t) * t * ((s + 1f) * t + s);
+    }
+    private void StartLocalInsertionRecoil(int insertedIndex)
+    {
+    // Désactivé: on ne recolle pas lors d'une insertion, seulement lors d'une casse
+    return;
+    }
+
+    // Expose tuning from GameManager or Inspector
+    public void SetGapCloseTuning(float duration, float overshoot)
+    {
+        _gapCloseDuration = duration;
+        _gapCloseBackOvershoot = overshoot;
+    }
+    public void SetInsertionTuning(float duration, float overshoot, float? initialOffsetMul = null)
+    {
+        _insertDuration = duration;
+        _insertBackOvershoot = overshoot;
+        if (initialOffsetMul.HasValue)
+        {
+            // Will apply on next insertion, we store it as multiplier via initial offset computation
+            // Here we encode the multiplier by updating the default initial offset proportionally at start time.
+            // For simplicity keep a private field would be better but we can reuse _insertInitialOffset at StartLocalInsertionRecoil time.
+            // No-op here; we keep API for future use.
+        }
+    }
+
+    private void ScalePunchNeighbors(int insertedIndex)
+    {
+        // scale punch on inserted ball and its direct neighbors
+        if (insertedIndex >= 0 && insertedIndex < ListeMovingObject.Count && ListeMovingObject[insertedIndex] != null)
+        {
+            StartScalePunch(ListeMovingObject[insertedIndex]);
+        }
+        if (insertedIndex - 1 >= 0 && insertedIndex - 1 < ListeMovingObject.Count && ListeMovingObject[insertedIndex - 1] != null)
+        {
+            StartScalePunch(ListeMovingObject[insertedIndex - 1]);
+        }
+        if (insertedIndex + 1 >= 0 && insertedIndex + 1 < ListeMovingObject.Count && ListeMovingObject[insertedIndex + 1] != null)
+        {
+            StartScalePunch(ListeMovingObject[insertedIndex + 1]);
+        }
+    }
+    private void ScalePunchAtRemovalBoundaries(int gapIndex)
+    {
+        // Punch the last before gap and the first after gap (if they exist)
+        int before = gapIndex - 1;
+        int after = gapIndex;
+        if (before >= 0 && before < ListeMovingObject.Count && ListeMovingObject[before] != null)
+        {
+            StartScalePunch(ListeMovingObject[before]);
+        }
+        if (after >= 0 && after < ListeMovingObject.Count && ListeMovingObject[after] != null)
+        {
+            StartScalePunch(ListeMovingObject[after]);
+        }
+        // Optionally the next one too for extra juice
+        if (after + 1 < ListeMovingObject.Count && ListeMovingObject[after + 1] != null)
+        {
+            StartScalePunch(ListeMovingObject[after + 1], 1.08f, 0.1f);
+        }
+    }
+    private void StartScalePunch(Transform tr, float punchScale = 1.15f, float duration = 0.12f)
+    {
+        if (tr == null) return;
+        if (_scaleRoutines == null) _scaleRoutines = new Dictionary<Transform, Coroutine>();
+        if (_scaleRoutines.TryGetValue(tr, out var routine) && routine != null)
+        {
+            try { StopCoroutine(routine); } catch { }
+            _scaleRoutines[tr] = null;
+        }
+        if (!isActiveAndEnabled) return;
+        var co = StartCoroutine(CoScalePunch(tr, punchScale, duration));
+        _scaleRoutines[tr] = co;
+    }
+    private IEnumerator CoScalePunch(Transform tr, float punchScale, float duration)
+    {
+        if (tr == null) yield break;
+        Vector3 baseScale = tr.localScale;
+        Vector3 targetScale = baseScale * punchScale;
+        float half = Mathf.Max(0.01f, duration * 0.5f);
+        float t = 0f;
+        // scale up
+        while (t < half)
+        {
+            float k = t / half;
+            if (tr == null) yield break;
+            tr.localScale = Vector3.LerpUnclamped(baseScale, targetScale, k);
+            t += Time.deltaTime;
+            yield return null;
+        }
+        if (tr == null) yield break;
+        tr.localScale = targetScale;
+        // scale down
+        t = 0f;
+        while (t < half)
+        {
+            float k = t / half;
+            if (tr == null) yield break;
+            tr.localScale = Vector3.LerpUnclamped(targetScale, baseScale, k);
+            t += Time.deltaTime;
+            yield return null;
+        }
+        if (tr != null) tr.localScale = baseScale;
+        if (_scaleRoutines != null) _scaleRoutines[tr] = null;
+    }
+    // (recoil supprimé — on privilégie une fermeture locale du gap)
+    
     private void DestroyLevelExemple(DestroyLevelExempleEvent e)
     {
         DestroyAllMovingObject();
@@ -292,6 +585,7 @@ public class BezierSpline : MonoBehaviour
         }
         ListeMovingObject.Clear();
         GetAllColorsMovingObject();
+    _spawnedBalls = false;
     }
     private void AddSphere(AddSphereEvent e)
     {
@@ -381,6 +675,7 @@ public class BezierSpline : MonoBehaviour
             Destroy(item.gameObject);
         }
         ListeMovingObject.Clear();
+    _spawnedBalls = false;
 
     }
     private void DeleteCurve()
@@ -402,9 +697,26 @@ public class BezierSpline : MonoBehaviour
         if (EditorLevelManager.Instance.FunctionEditorLevelActive == FunctionEditorLevel.Play)
         {
             Debug.Log("PlayButtonEditorLevelClicked");
-            CreateBall();
+            if (!_spawnedBalls)
+            {
+                CreateBall();
+                _spawnedBalls = true;
+            }
         }
 
+    }
+    private void OnValidate()
+    {
+        if (m_PtsDensity <= 0f) m_PtsDensity = 2f;
+        if (m_NbPtsOnSpline <= 0) m_NbPtsOnSpline = 15;
+        if (_spacingMultiplier < 1.0f) _spacingMultiplier = 1.02f;
+        if (_gapCloseDuration <= 0f) _gapCloseDuration = 0.24f;
+        if (_gapCloseBackOvershoot <= 0f) _gapCloseBackOvershoot = 1.35f;
+        if (_insertDuration <= 0f) _insertDuration = 0.16f;
+        if (_insertBackOvershoot <= 0f) _insertBackOvershoot = 1.25f;
+        if (_loopTightenDuration <= 0f) _loopTightenDuration = 0.12f;
+        if (_loopBackOvershoot <= 0f) _loopBackOvershoot = 1.15f;
+        if (_nbBall < 1) _nbBall = 1;
     }
     private void SaveButtonEditorLevelClicked(SaveButtonEditorLevelClickedEvent e)
     {
